@@ -14,9 +14,20 @@ class SchedulePage extends StatefulWidget {
 }
 
 class _SchedulePageState extends State<SchedulePage> {
+//creating a database instance
+
   final DatabaseManager _db = DatabaseManager();
+
+//first day would have index 0 but then
+//we'll be adding +1 to get 4 days displayed
+//as a small calendar in the schedule
+
   int selectedDayIndex = 0;
   late List<_DayItem> _days;
+
+//generating a list of tasks that would display
+//tasks from my tasks page/database
+
   List<Map<String, dynamic>> _allTasks = [];
 
   @override
@@ -26,6 +37,12 @@ class _SchedulePageState extends State<SchedulePage> {
     _loadAllTasks();
   }
 
+//generating a list of 4 days starting from the current day index i
+//to the duration you add the index
+//meaning today + i = the next day
+//then retun a day item that has the date + day in a colum
+//meaning label and date of the day
+
   List<_DayItem> _generateDays() {
     final today = DateTime.now();
     return List.generate(4, (i) {
@@ -34,6 +51,10 @@ class _SchedulePageState extends State<SchedulePage> {
       return _DayItem(label, date.day);
     });
   }
+
+//switching between the days of the week
+//to know what day the current day is to display
+//the respective text monday = mon
 
   String _weekdayLabel(int weekday) {
     switch (weekday) {
@@ -56,6 +77,9 @@ class _SchedulePageState extends State<SchedulePage> {
     }
   }
 
+//loading the tasks from the database and the date/time they
+//are due in a row based on the user email
+
   Future<void> _loadAllTasks() async {
     final rows = await _db.getTasksForUser(widget.email);
     setState(() => _allTasks = rows);
@@ -70,6 +94,13 @@ class _SchedulePageState extends State<SchedulePage> {
       return null;
     }
   }
+
+//now target only the dask for the specific date
+//meaning compare today's date with the database date
+//if they match, display a list of those days
+//This code selects tasks for the chosen day
+//and gives each a “time value” so you can sort
+//them from earliest to latest.
 
   List<Map<String, dynamic>> get _tasksForSelectedDay {
     final targetDay = _days[selectedDayIndex].day;
@@ -96,6 +127,8 @@ class _SchedulePageState extends State<SchedulePage> {
 
     return filtered;
   }
+
+//
 
   Future<void> _setTaskTime(Map<String, dynamic> task) async {
     if ((task['status'] as String?)?.toLowerCase() == 'done')
