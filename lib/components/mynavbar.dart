@@ -45,6 +45,18 @@ class MyNavBar extends StatelessWidget {
                 },
               ),
               IconBottomBar(
+                text: "Tasks",
+                icon: CupertinoIcons.square_list_fill,
+                selected: currentIndex == 2,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => TasksPage(email: email)),
+                  );
+                },
+              ),
+              IconBottomBar(
                 text: "Schedule",
                 icon: CupertinoIcons.calendar,
                 selected: currentIndex == 1,
@@ -53,20 +65,6 @@ class MyNavBar extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) => SchedulePage(
-                              email: email,
-                            )),
-                  );
-                },
-              ),
-              IconBottomBar(
-                text: "Tasks",
-                icon: CupertinoIcons.square_list_fill,
-                selected: currentIndex == 2,
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => TasksPage(
                               email: email,
                             )),
                   );

@@ -1,6 +1,3 @@
-// ==============================
-// dashboard.dart
-// ==============================
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -48,13 +45,6 @@ class _DashboardState extends State<Dashboard> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        leading: IconButton(
-          onPressed: () => Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const LoginPage()),
-          ),
-          icon: const Icon(Icons.arrow_back),
-        ),
         title: const Text(
           'D A S H B O A R D',
           style: TextStyle(color: Color(0xff050c20)),
