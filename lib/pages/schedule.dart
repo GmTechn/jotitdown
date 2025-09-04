@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:notesapp/components/mynavbar.dart';
-import 'package:notesapp/components/myschedulecard.dart';
 import 'package:notesapp/management/database.dart';
 import 'package:notesapp/components/myschedulecard.dart';
 
