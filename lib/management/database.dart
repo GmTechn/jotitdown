@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:notesapp/models/task.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:notesapp/models/users.dart';
@@ -155,7 +156,7 @@ class DatabaseManager {
   }
 
   /// Get tasks for a specific user (ordered newest first)
-  Future<List<Map<String, dynamic>>> getTasksForUser(String userEmail) async {
+  Future<List<Task>> getTasksForUser(String userEmail) async {
     final db = await database;
     final rows = await db.query(
       'tasks',
@@ -163,7 +164,9 @@ class DatabaseManager {
       whereArgs: [userEmail],
       orderBy: 'createdAt DESC',
     );
-    return rows;
+
+    // Convert Maps to Task objects
+    return rows.map((row) => Task.fromMap(row)).toList();
   }
 
   /// Delete a task by id

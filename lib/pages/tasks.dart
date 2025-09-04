@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:notesapp/components/mynavbar.dart';
 import 'package:notesapp/components/mytasks.dart';
 import 'package:notesapp/management/database.dart';
+import 'package:notesapp/models/task.dart';
 
 class TasksPage extends StatefulWidget {
   const TasksPage({super.key, required this.email});
@@ -15,7 +16,8 @@ class TasksPage extends StatefulWidget {
 class _TasksPageState extends State<TasksPage> {
   final DatabaseManager _dbManager = DatabaseManager();
 
-  List<Map<String, dynamic>> tasks = [];
+  List<Task> tasks = [];
+
   String selectedFilter = "All";
 
   @override
@@ -25,27 +27,24 @@ class _TasksPageState extends State<TasksPage> {
   }
 
   Future<void> _loadTasks() async {
-    final rows = await _dbManager.getTasksForUser(widget.email);
+    final fetchedTasks =
+        await _dbManager.getTasksForUser(widget.email); // retourne List<Task>
     setState(() {
-      tasks = rows;
+      tasks = fetchedTasks;
     });
   }
 
   // Create or edit task dialog
-  void _showCreateTaskDialog({Map<String, dynamic>? task}) {
-    final titleController = TextEditingController(text: task?["title"] ?? "");
+  void _showCreateTaskDialog({Task? task}) {
+    final titleController = TextEditingController(text: task?.title ?? "");
     final subtitleController =
-        TextEditingController(text: task?["subtitle"] ?? "");
-    String status = task?["status"] ?? "To do";
-    DateTime? selectedDate = task != null ? DateTime.parse(task["date"]) : null;
+        TextEditingController(text: task?.subtitle ?? "");
+    String status = task?.status ?? "To do";
+    DateTime? selectedDate = task?.date;
 
-    // Build items: default only To do / In progress.
-    // If editing and current status is something else (e.g. "Done"), include it so Dropdown has that value
     final Set<String> itemsSet = {"To do", "In progress"};
-    if (task != null) {
-      final s = (task["status"] as String?) ?? "To do";
-      if (!itemsSet.contains(s)) itemsSet.add(s);
-    }
+    if (task != null && !itemsSet.contains(task.status))
+      itemsSet.add(task.status);
     final itemsList = itemsSet.toList();
 
     showDialog(
@@ -90,7 +89,7 @@ class _TasksPageState extends State<TasksPage> {
                           child: Text(
                             selectedDate == null
                                 ? "No date chosen"
-                                : "${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}",
+                                : "${selectedDate?.day}/${selectedDate?.month}/${selectedDate?.year}",
                           ),
                         ),
                         TextButton(
@@ -121,7 +120,7 @@ class _TasksPageState extends State<TasksPage> {
                 if (task != null)
                   TextButton(
                     onPressed: () async {
-                      await _dbManager.deleteTask(task["id"]);
+                      await _dbManager.deleteTask(task.id!);
                       await _loadTasks();
                       Navigator.of(context).pop();
                     },
@@ -142,7 +141,6 @@ class _TasksPageState extends State<TasksPage> {
                         subtitleController.text.isNotEmpty &&
                         selectedDate != null) {
                       if (task == null) {
-                        // insert new task (no start/end times yet)
                         await _dbManager.insertTask(
                           userEmail: widget.email,
                           status: status,
@@ -151,28 +149,19 @@ class _TasksPageState extends State<TasksPage> {
                           date: selectedDate!,
                         );
                       } else {
-                        // update existing task but keep startTime/endTime untouched
-                        final db = await _dbManager.database;
-                        await db.update(
-                          'tasks',
-                          {
-                            'status': status,
-                            'title': titleController.text,
-                            'subtitle': subtitleController.text,
-                            'date': selectedDate!.toIso8601String(),
-                            // do NOT touch startTime/endTime here (preserve)
-                          },
-                          where: 'id = ?',
-                          whereArgs: [task["id"]],
+                        await _dbManager.updateTask(
+                          id: task.id!,
+                          status: status,
+                          title: titleController.text,
+                          subtitle: subtitleController.text,
+                          date: selectedDate!,
                         );
                       }
                       await _loadTasks();
                       Navigator.of(context).pop();
                     }
                   },
-                  child: Text(
-                    task == null ? "Add" : "Save",
-                  ),
+                  child: Text(task == null ? "Add" : "Save"),
                 ),
               ],
             );
@@ -182,14 +171,13 @@ class _TasksPageState extends State<TasksPage> {
     );
   }
 
-  // Filtering tasks selection
-  List<Map<String, dynamic>> get filteredTasks {
+  List<Task> get filteredTasks {
     if (selectedFilter == "All") return tasks;
-    return tasks.where((t) => t["status"] == selectedFilter).toList();
+    return tasks.where((t) => t.status == selectedFilter).toList();
   }
 
   // Menu to "Mark as Done", "Edit", "Delete"
-  void _showTaskOptions(Map<String, dynamic> task) {
+  void _showTaskOptions(Task task) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -202,13 +190,12 @@ class _TasksPageState extends State<TasksPage> {
               leading: const Icon(Icons.check_circle, color: Colors.green),
               title: const Text("Mark as Done"),
               onTap: () async {
-                final db = await _dbManager.database;
-                // only update the status — do not touch startTime/endTime (preserve)
-                await db.update(
-                  'tasks',
-                  {'status': 'Done'},
-                  where: 'id = ?',
-                  whereArgs: [task["id"]],
+                await _dbManager.updateTask(
+                  id: task.id!,
+                  status: 'Done',
+                  title: task.title,
+                  subtitle: task.subtitle,
+                  date: task.date,
                 );
                 Navigator.of(context).pop();
                 await _loadTasks();
@@ -226,7 +213,7 @@ class _TasksPageState extends State<TasksPage> {
               leading: const Icon(Icons.delete, color: Colors.red),
               title: const Text("Delete Task"),
               onTap: () async {
-                await _dbManager.deleteTask(task["id"]);
+                await _dbManager.deleteTask(task.id!);
                 Navigator.of(context).pop();
                 await _loadTasks();
               },
@@ -277,10 +264,10 @@ class _TasksPageState extends State<TasksPage> {
                       return GestureDetector(
                         onTap: () => _showTaskOptions(task),
                         child: TaskCard(
-                          status: task["status"],
-                          title: task["title"],
-                          subject: task["subtitle"],
-                          date: DateTime.parse(task["date"]),
+                          status: task.status,
+                          title: task.title,
+                          subject: task.subtitle,
+                          date: task.date,
                         ),
                       );
                     },

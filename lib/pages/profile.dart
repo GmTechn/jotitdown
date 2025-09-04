@@ -213,7 +213,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 onPressed: () => Navigator.pop(context),
                 child: const Text(
                   'OK',
-                  style: TextStyle(color: Colors.blue),
                 ),
               ),
             ],

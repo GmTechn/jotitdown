@@ -4,57 +4,50 @@ import 'package:intl/intl.dart';
 import 'package:notesapp/components/mynavbar.dart';
 import 'package:notesapp/management/database.dart';
 import 'package:notesapp/components/myschedulecard.dart';
+import 'package:notesapp/models/task.dart';
 
 class SchedulePage extends StatefulWidget {
-  const SchedulePage({super.key, required this.email});
+  const SchedulePage({super.key, required this.email, this.selectedDate});
   final String email;
+  final DateTime?
+      selectedDate; // permet d’ouvrir sur une date spécifique depuis dashboard
 
   @override
   State<SchedulePage> createState() => _SchedulePageState();
 }
 
 class _SchedulePageState extends State<SchedulePage> {
-//creating a database instance
-
   final DatabaseManager _db = DatabaseManager();
-
-//first day would have index 0 but then
-//we'll be adding +1 to get 4 days displayed
-//as a small calendar in the schedule
 
   int selectedDayIndex = 0;
   late List<_DayItem> _days;
 
-//generating a list of tasks that would display
-//tasks from my tasks page/database
-
-  List<Map<String, dynamic>> _allTasks = [];
+  List<Task> _allTasks = [];
 
   @override
   void initState() {
     super.initState();
     _days = _generateDays();
+    // si on vient du dashboard avec une date spécifique
+    if (widget.selectedDate != null) {
+      final idx = _days.indexWhere((d) =>
+          d.date.year == widget.selectedDate!.year &&
+          d.date.month == widget.selectedDate!.month &&
+          d.date.day == widget.selectedDate!.day);
+      if (idx >= 0) selectedDayIndex = idx;
+    }
+
     _loadAllTasks();
   }
-
-//generating a list of 4 days starting from the current day index i
-//to the duration you add the index
-//meaning today + i = the next day
-//then retun a day item that has the date + day in a colum
-//meaning label and date of the day
 
   List<_DayItem> _generateDays() {
     final today = DateTime.now();
     return List.generate(4, (i) {
       final date = today.add(Duration(days: i));
       final label = _weekdayLabel(date.weekday);
-      return _DayItem(label, date.day);
+      return _DayItem(label, date);
     });
   }
-
-//switching between the days of the week
-//to know what day the current day is to display
-//the respective text monday = mon
 
   String _weekdayLabel(int weekday) {
     switch (weekday) {
@@ -77,37 +70,21 @@ class _SchedulePageState extends State<SchedulePage> {
     }
   }
 
-//loading the tasks from the database and the date/time they
-//are due in a row based on the user email
-
   Future<void> _loadAllTasks() async {
-    final rows = await _db.getTasksForUser(widget.email);
-    setState(() => _allTasks = rows);
+    final tasks = await _db.getTasksForUser(widget.email);
+    setState(() {
+      _allTasks = tasks;
+    });
   }
 
-  DateTime? _rowDate(Map<String, dynamic> row) {
-    final raw = row['date'];
-    if (raw == null || (raw is String && raw.isEmpty)) return null;
-    try {
-      return DateTime.parse(raw as String);
-    } catch (_) {
-      return null;
-    }
-  }
-
-//now target only the dask for the specific date
-//meaning compare today's date with the database date
-//if they match, display a list of those days
-//This code selects tasks for the chosen day
-//and gives each a “time value” so you can sort
-//them from earliest to latest.
-
-  List<Map<String, dynamic>> get _tasksForSelectedDay {
-    final targetDay = _days[selectedDayIndex].day;
-    final filtered = _allTasks.where((row) {
-      final d = _rowDate(row);
-      return d != null && d.day == targetDay;
-    }).toList();
+  List<Task> get _tasksForSelectedDay {
+    final targetDate = _days[selectedDayIndex].date;
+    final filtered = _allTasks
+        .where((t) =>
+            t.date.year == targetDate.year &&
+            t.date.month == targetDate.month &&
+            t.date.day == targetDate.day)
+        .toList();
 
     int timeKey(String? t) {
       if (t == null || t.isEmpty) return 24 * 60 + 1;
@@ -120,22 +97,19 @@ class _SchedulePageState extends State<SchedulePage> {
     }
 
     filtered.sort((a, b) {
-      final ak = timeKey(a['startTime'] as String?);
-      final bk = timeKey(b['startTime'] as String?);
+      final ak = timeKey(a.startTime);
+      final bk = timeKey(b.startTime);
       return ak.compareTo(bk);
     });
 
     return filtered;
   }
 
-//
+  Future<void> _setTaskTime(Task task) async {
+    if (task.status.toLowerCase() == 'done') return;
 
-  Future<void> _setTaskTime(Map<String, dynamic> task) async {
-    if ((task['status'] as String?)?.toLowerCase() == 'done')
-      return; // protection
-
-    String? startStr = (task['startTime'] as String?)?.trim();
-    String? endStr = (task['endTime'] as String?)?.trim();
+    String? startStr = task.startTime?.trim();
+    String? endStr = task.endTime?.trim();
 
     TimeOfDay? _toTOD(String? t) {
       if (t == null || t.isEmpty) return null;
@@ -203,22 +177,22 @@ class _SchedulePageState extends State<SchedulePage> {
                 return;
               }
 
-              final db = await _db.database;
-              await db.update(
-                'tasks',
-                {
-                  'startTime': startTOD != null
-                      ? DateFormat.jm().format(
-                          DateTime(0, 1, 1, startTOD!.hour, startTOD!.minute))
-                      : '',
-                  'endTime': endTOD != null
-                      ? DateFormat.jm().format(
-                          DateTime(0, 1, 1, endTOD!.hour, endTOD!.minute))
-                      : '',
-                },
-                where: 'id = ?',
-                whereArgs: [task['id']],
+              await _db.updateTask(
+                id: task.id!,
+                status: task.status,
+                title: task.title,
+                subtitle: task.subtitle,
+                date: task.date,
+                startTime: startTOD != null
+                    ? DateFormat.jm().format(
+                        DateTime(0, 1, 1, startTOD!.hour, startTOD!.minute))
+                    : null,
+                endTime: endTOD != null
+                    ? DateFormat.jm()
+                        .format(DateTime(0, 1, 1, endTOD!.hour, endTOD!.minute))
+                    : null,
               );
+
               if (mounted) {
                 Navigator.pop(context);
                 await _loadAllTasks();
@@ -245,7 +219,6 @@ class _SchedulePageState extends State<SchedulePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Start
                       InkWell(
                         onTap: pickStart,
                         child: Row(
@@ -272,8 +245,7 @@ class _SchedulePageState extends State<SchedulePage> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 80), // space between start and end
-                      // End
+                      const SizedBox(width: 80),
                       InkWell(
                         onTap: pickEnd,
                         child: Row(
@@ -313,16 +285,12 @@ class _SchedulePageState extends State<SchedulePage> {
                             endTOD = null;
                           });
                         },
-                        child: const Text(
-                          'Clear',
-                        ),
+                        child: const Text('Clear'),
                       ),
                       const SizedBox(width: 80),
                       TextButton(
                         onPressed: _saveTimes,
-                        child: const Text(
-                          'Save',
-                        ),
+                        child: const Text('Save'),
                       ),
                     ],
                   ),
@@ -339,6 +307,7 @@ class _SchedulePageState extends State<SchedulePage> {
   @override
   Widget build(BuildContext context) {
     final pillColor = const Color(0xff050c20);
+    final today = DateTime.now();
 
     return Scaffold(
       appBar: AppBar(
@@ -393,7 +362,7 @@ class _SchedulePageState extends State<SchedulePage> {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              _days[i].day.toString(),
+                              _days[i].date.day.toString(),
                               style: TextStyle(
                                 color: isSel ? Colors.white : Colors.black87,
                                 fontSize: 16,
@@ -424,34 +393,33 @@ class _SchedulePageState extends State<SchedulePage> {
                       itemBuilder: (context, index) {
                         final t = _tasksForSelectedDay[index];
 
-                        final String title = (t['title'] as String?) ?? '';
-                        final String subtitle =
-                            (t['subtitle'] as String?) ?? '';
-                        final String statusRaw =
-                            ((t['status'] as String?) ?? '').toLowerCase();
-
+                        // ✅ Correction : statut gris si date dans le futur
                         String normalized;
-                        if (statusRaw.contains('done')) {
-                          normalized = 'done';
-                        } else if (statusRaw.contains('progress')) {
-                          normalized = 'in_progress';
+                        final now = DateTime.now();
+                        if (t.date.isAfter(now)) {
+                          normalized = 'todo'; // gris
                         } else {
-                          normalized = 'todo';
+                          final statusRaw = t.status.toLowerCase();
+                          if (statusRaw.contains('done')) {
+                            normalized = 'done';
+                          } else if (statusRaw.contains('progress')) {
+                            normalized = 'in_progress';
+                          } else {
+                            normalized = 'todo';
+                          }
                         }
 
                         final String start =
-                            (t['startTime'] as String?)?.trim().isNotEmpty ==
-                                    true
-                                ? (t['startTime'] as String)
+                            t.startTime?.trim().isNotEmpty == true
+                                ? t.startTime!
                                 : '--:--';
-                        final String end =
-                            (t['endTime'] as String?)?.trim().isNotEmpty == true
-                                ? (t['endTime'] as String)
-                                : '--:--';
+                        final String end = t.endTime?.trim().isNotEmpty == true
+                            ? t.endTime!
+                            : '--:--';
 
                         return MyScheduleCard(
-                          title: title,
-                          subtitle: subtitle,
+                          title: t.title,
+                          subtitle: t.subtitle,
                           start: start,
                           end: end,
                           status: normalized,
@@ -469,14 +437,12 @@ class _SchedulePageState extends State<SchedulePage> {
   }
 }
 
-// --- Classe DayItem interne ---
 class _DayItem {
   final String label;
-  final int day;
-  const _DayItem(this.label, this.day);
+  final DateTime date;
+  const _DayItem(this.label, this.date);
 }
 
-// --- Classe SheetHandle ---
 class _SheetHandle extends StatelessWidget {
   const _SheetHandle();
   @override

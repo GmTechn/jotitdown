@@ -13,6 +13,7 @@ void main() async {
   final dbManager = DatabaseManager();
 
   // ✅ Clear database during testing
+
   await dbManager.clearDatabase();
 
   await dbManager.initialisation();
@@ -30,7 +31,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      initialRoute: '/dashboard',
+      initialRoute: '/',
       routes: {
         '/': (context) => const LoginPage(),
         // You can handle navigation with email using onGenerateRoute
