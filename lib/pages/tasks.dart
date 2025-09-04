@@ -1,3 +1,4 @@
+// tasks.dart
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:notesapp/components/mynavbar.dart';
@@ -31,14 +32,22 @@ class _TasksPageState extends State<TasksPage> {
     });
   }
 
-  //Create Task for the first time with only two statuses
-
+  // Create or edit task dialog
   void _showCreateTaskDialog({Map<String, dynamic>? task}) {
     final titleController = TextEditingController(text: task?["title"] ?? "");
     final subtitleController =
         TextEditingController(text: task?["subtitle"] ?? "");
     String status = task?["status"] ?? "To do";
     DateTime? selectedDate = task != null ? DateTime.parse(task["date"]) : null;
+
+    // Build items: default only To do / In progress.
+    // If editing and current status is something else (e.g. "Done"), include it so Dropdown has that value
+    final Set<String> itemsSet = {"To do", "In progress"};
+    if (task != null) {
+      final s = (task["status"] as String?) ?? "To do";
+      if (!itemsSet.contains(s)) itemsSet.add(s);
+    }
+    final itemsList = itemsSet.toList();
 
     showDialog(
       context: context,
@@ -56,7 +65,7 @@ class _TasksPageState extends State<TasksPage> {
                   children: [
                     DropdownButtonFormField<String>(
                       value: status,
-                      items: ["To do", "In progress"]
+                      items: itemsList
                           .map((s) => DropdownMenuItem(
                                 value: s,
                                 child: Text(s),
@@ -124,8 +133,8 @@ class _TasksPageState extends State<TasksPage> {
                   ),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child:
-                      const Text("Cancel", style: TextStyle(color: Colors.red)),
+                  child: const Text("Cancel",
+                      style: TextStyle(color: Colors.blue)),
                 ),
                 TextButton(
                   onPressed: () async {
@@ -133,6 +142,7 @@ class _TasksPageState extends State<TasksPage> {
                         subtitleController.text.isNotEmpty &&
                         selectedDate != null) {
                       if (task == null) {
+                        // insert new task (no start/end times yet)
                         await _dbManager.insertTask(
                           userEmail: widget.email,
                           status: status,
@@ -141,12 +151,19 @@ class _TasksPageState extends State<TasksPage> {
                           date: selectedDate!,
                         );
                       } else {
-                        await _dbManager.updateTask(
-                          id: task["id"],
-                          status: status,
-                          title: titleController.text,
-                          subtitle: subtitleController.text,
-                          date: selectedDate!,
+                        // update existing task but keep startTime/endTime untouched
+                        final db = await _dbManager.database;
+                        await db.update(
+                          'tasks',
+                          {
+                            'status': status,
+                            'title': titleController.text,
+                            'subtitle': subtitleController.text,
+                            'date': selectedDate!.toIso8601String(),
+                            // do NOT touch startTime/endTime here (preserve)
+                          },
+                          where: 'id = ?',
+                          whereArgs: [task["id"]],
                         );
                       }
                       await _loadTasks();
@@ -164,16 +181,13 @@ class _TasksPageState extends State<TasksPage> {
     );
   }
 
-//Filtering tasks selection
-
+  // Filtering tasks selection
   List<Map<String, dynamic>> get filteredTasks {
     if (selectedFilter == "All") return tasks;
     return tasks.where((t) => t["status"] == selectedFilter).toList();
   }
 
-//Menu to "Edit", "Delete", "Update" tasks
-//ListTiles to display those options
-
+  // Menu to "Mark as Done", "Edit", "Delete"
   void _showTaskOptions(Map<String, dynamic> task) {
     showModalBottomSheet(
       context: context,
@@ -187,12 +201,13 @@ class _TasksPageState extends State<TasksPage> {
               leading: const Icon(Icons.check_circle, color: Colors.green),
               title: const Text("Mark as Done"),
               onTap: () async {
-                await _dbManager.updateTask(
-                  id: task["id"],
-                  status: "Done",
-                  title: task["title"],
-                  subtitle: task["subtitle"],
-                  date: DateTime.parse(task["date"]),
+                final db = await _dbManager.database;
+                // only update the status — do not touch startTime/endTime (preserve)
+                await db.update(
+                  'tasks',
+                  {'status': 'Done'},
+                  where: 'id = ?',
+                  whereArgs: [task["id"]],
                 );
                 Navigator.of(context).pop();
                 await _loadTasks();
@@ -237,7 +252,7 @@ class _TasksPageState extends State<TasksPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Text('Filters'),
+                const Text('Filters'),
                 Wrap(
                   spacing: 10,
                   children: [
@@ -247,7 +262,6 @@ class _TasksPageState extends State<TasksPage> {
                     _buildFilterButton("Done")
                   ],
                 ),
-                // const Icon(Icons.filter_list, color: Colors.black54),
               ],
             ),
           ),
@@ -283,9 +297,6 @@ class _TasksPageState extends State<TasksPage> {
     );
   }
 
-//Building buttons to filter the tasks
-//Showing "Done", "All", "In progress", "To do"
-
   Widget _buildFilterButton(String label) {
     final isSelected = selectedFilter == label;
     return GestureDetector(
@@ -306,8 +317,6 @@ class _TasksPageState extends State<TasksPage> {
       ),
     );
   }
-
-//Displaying a text when there is not task
 
   Widget _buildEmptyState() {
     return const Center(
