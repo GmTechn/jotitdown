@@ -132,8 +132,9 @@ class _TasksPageState extends State<TasksPage> {
                   ),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text("Cancel",
-                      style: TextStyle(color: Colors.blue)),
+                  child: const Text(
+                    "Cancel",
+                  ),
                 ),
                 TextButton(
                   onPressed: () async {
@@ -169,8 +170,9 @@ class _TasksPageState extends State<TasksPage> {
                       Navigator.of(context).pop();
                     }
                   },
-                  child: Text(task == null ? "Add" : "Save",
-                      style: const TextStyle(color: Colors.green)),
+                  child: Text(
+                    task == null ? "Add" : "Save",
+                  ),
                 ),
               ],
             );
@@ -289,7 +291,7 @@ class _TasksPageState extends State<TasksPage> {
       floatingActionButton: FloatingActionButton(
         tooltip: 'Add a new task',
         onPressed: () => _showCreateTaskDialog(),
-        backgroundColor: Colors.black,
+        backgroundColor: Color(0xff050c20),
         child: const Icon(CupertinoIcons.add, color: Colors.white),
       ),
       bottomNavigationBar: MyNavBar(currentIndex: 2, email: widget.email),
@@ -303,13 +305,13 @@ class _TasksPageState extends State<TasksPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.black : Colors.grey.shade200,
+          color: isSelected ? Color(0xff050c20) : Colors.grey.shade200,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : Colors.black,
+            color: isSelected ? Colors.white : Color(0xff050c20),
             fontWeight: FontWeight.w500,
           ),
         ),

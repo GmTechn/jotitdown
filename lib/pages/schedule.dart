@@ -315,10 +315,6 @@ class _SchedulePageState extends State<SchedulePage> {
                         },
                         child: const Text(
                           'Clear',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red,
-                          ),
                         ),
                       ),
                       const SizedBox(width: 80),
@@ -326,10 +322,6 @@ class _SchedulePageState extends State<SchedulePage> {
                         onPressed: _saveTimes,
                         child: const Text(
                           'Save',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
-                          ),
                         ),
                       ),
                     ],
@@ -346,7 +338,7 @@ class _SchedulePageState extends State<SchedulePage> {
 
   @override
   Widget build(BuildContext context) {
-    final pillColor = const Color(0xff6D5DF6);
+    final pillColor = const Color(0xff050c20);
 
     return Scaffold(
       appBar: AppBar(

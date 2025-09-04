@@ -242,13 +242,11 @@ class _ProfilePageState extends State<ProfilePage> {
               onPressed: () => Navigator.pop(ctx, false),
               child: const Text(
                 'No',
-                style: TextStyle(color: Colors.blue),
               )),
           TextButton(
               onPressed: () => Navigator.pop(ctx, true),
               child: const Text(
                 'Yes',
-                style: TextStyle(color: Colors.red),
               )),
         ],
       ),
