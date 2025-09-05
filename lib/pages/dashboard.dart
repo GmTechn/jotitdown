@@ -14,6 +14,8 @@ import 'package:notesapp/models/users.dart';
 import 'package:notesapp/models/task.dart';
 
 import 'package:notesapp/pages/profile.dart';
+import 'package:notesapp/pages/schedule.dart';
+import 'package:notesapp/pages/tasks.dart';
 
 class Dashboard extends StatefulWidget {
   final String email;
@@ -166,7 +168,13 @@ class _DashboardState extends State<Dashboard> {
                       Stack(
                         children: [
                           IconButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          SchedulePage(email: widget.email)));
+                            },
                             icon: const Icon(
                               CupertinoIcons.bell,
                               size: 28,

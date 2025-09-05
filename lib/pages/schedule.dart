@@ -2,15 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:notesapp/components/mynavbar.dart';
-import 'package:notesapp/management/database.dart';
 import 'package:notesapp/components/myschedulecard.dart';
+import 'package:notesapp/management/database.dart';
 import 'package:notesapp/models/task.dart';
 
 class SchedulePage extends StatefulWidget {
-  const SchedulePage({super.key, required this.email, this.selectedDate});
+  const SchedulePage({super.key, required this.email});
   final String email;
-  final DateTime?
-      selectedDate; // permet d’ouvrir sur une date spécifique depuis dashboard
 
   @override
   State<SchedulePage> createState() => _SchedulePageState();
@@ -18,7 +16,6 @@ class SchedulePage extends StatefulWidget {
 
 class _SchedulePageState extends State<SchedulePage> {
   final DatabaseManager _db = DatabaseManager();
-
   int selectedDayIndex = 0;
   late List<_DayItem> _days;
 
@@ -28,15 +25,6 @@ class _SchedulePageState extends State<SchedulePage> {
   void initState() {
     super.initState();
     _days = _generateDays();
-    // si on vient du dashboard avec une date spécifique
-    if (widget.selectedDate != null) {
-      final idx = _days.indexWhere((d) =>
-          d.date.year == widget.selectedDate!.year &&
-          d.date.month == widget.selectedDate!.month &&
-          d.date.day == widget.selectedDate!.day);
-      if (idx >= 0) selectedDayIndex = idx;
-    }
-
     _loadAllTasks();
   }
 
@@ -45,7 +33,7 @@ class _SchedulePageState extends State<SchedulePage> {
     return List.generate(4, (i) {
       final date = today.add(Duration(days: i));
       final label = _weekdayLabel(date.weekday);
-      return _DayItem(label, date);
+      return _DayItem(label, date.day);
     });
   }
 
@@ -77,14 +65,19 @@ class _SchedulePageState extends State<SchedulePage> {
     });
   }
 
+  DateTime? _rowDate(Map<String, dynamic> row) {
+    final raw = row['date'];
+    if (raw == null || (raw is String && raw.isEmpty)) return null;
+    try {
+      return DateTime.parse(raw as String);
+    } catch (_) {
+      return null;
+    }
+  }
+
   List<Task> get _tasksForSelectedDay {
-    final targetDate = _days[selectedDayIndex].date;
-    final filtered = _allTasks
-        .where((t) =>
-            t.date.year == targetDate.year &&
-            t.date.month == targetDate.month &&
-            t.date.day == targetDate.day)
-        .toList();
+    final targetDay = _days[selectedDayIndex].day;
+    final filtered = _allTasks.where((t) => t.date.day == targetDay).toList();
 
     int timeKey(String? t) {
       if (t == null || t.isEmpty) return 24 * 60 + 1;
@@ -192,7 +185,6 @@ class _SchedulePageState extends State<SchedulePage> {
                         .format(DateTime(0, 1, 1, endTOD!.hour, endTOD!.minute))
                     : null,
               );
-
               if (mounted) {
                 Navigator.pop(context);
                 await _loadAllTasks();
@@ -217,66 +209,30 @@ class _SchedulePageState extends State<SchedulePage> {
                   ),
                   const SizedBox(height: 16),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      InkWell(
-                        onTap: pickStart,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Icon(CupertinoIcons.clock, size: 28),
-                            const SizedBox(width: 8),
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Start',
-                                  style: TextStyle(fontWeight: FontWeight.w600),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  _fmt(startTOD),
-                                  style: const TextStyle(color: Colors.black87),
-                                ),
-                              ],
-                            ),
-                          ],
+                      Expanded(
+                        child: ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(CupertinoIcons.clock),
+                          title: const Text('Start'),
+                          subtitle: Text(_fmt(startTOD)),
+                          onTap: pickStart,
                         ),
                       ),
-                      const SizedBox(width: 80),
-                      InkWell(
-                        onTap: pickEnd,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Icon(CupertinoIcons.clock_fill, size: 28),
-                            const SizedBox(width: 8),
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'End',
-                                  style: TextStyle(fontWeight: FontWeight.w600),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  _fmt(endTOD),
-                                  style: const TextStyle(color: Colors.black87),
-                                ),
-                              ],
-                            ),
-                          ],
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(CupertinoIcons.clock_fill),
+                          title: const Text('End'),
+                          subtitle: Text(_fmt(endTOD)),
+                          onTap: pickEnd,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       TextButton(
                         onPressed: () {
@@ -285,16 +241,19 @@ class _SchedulePageState extends State<SchedulePage> {
                             endTOD = null;
                           });
                         },
-                        child: const Text('Clear'),
+                        child: const Text(
+                          'Clear',
+                          style: TextStyle(color: Colors.red),
+                        ),
                       ),
-                      const SizedBox(width: 80),
-                      TextButton(
+                      const Spacer(),
+                      ElevatedButton(
                         onPressed: _saveTimes,
                         child: const Text('Save'),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 16),
                 ],
               ),
             );
@@ -306,8 +265,7 @@ class _SchedulePageState extends State<SchedulePage> {
 
   @override
   Widget build(BuildContext context) {
-    final pillColor = const Color(0xff050c20);
-    final today = DateTime.now();
+    final pillColor = const Color(0xff6D5DF6);
 
     return Scaffold(
       appBar: AppBar(
@@ -362,7 +320,7 @@ class _SchedulePageState extends State<SchedulePage> {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              _days[i].date.day.toString(),
+                              _days[i].day.toString(),
                               style: TextStyle(
                                 color: isSel ? Colors.white : Colors.black87,
                                 fontSize: 16,
@@ -392,21 +350,43 @@ class _SchedulePageState extends State<SchedulePage> {
                       separatorBuilder: (_, __) => const SizedBox(height: 10),
                       itemBuilder: (context, index) {
                         final t = _tasksForSelectedDay[index];
-
-                        // ✅ Correction : statut gris si date dans le futur
-                        String normalized;
                         final now = DateTime.now();
-                        if (t.date.isAfter(now)) {
-                          normalized = 'todo'; // gris
-                        } else {
-                          final statusRaw = t.status.toLowerCase();
-                          if (statusRaw.contains('done')) {
-                            normalized = 'done';
-                          } else if (statusRaw.contains('progress')) {
-                            normalized = 'in_progress';
+                        final today = DateTime(now.year, now.month, now.day);
+                        final taskDate =
+                            DateTime(t.date.year, t.date.month, t.date.day);
+
+                        String normalizedStatus;
+
+                        if (t.status.toLowerCase() == 'done') {
+                          normalizedStatus = 'done';
+                        } else if (taskDate == today) {
+                          final startDT =
+                              t.startTime != null && t.startTime!.isNotEmpty
+                                  ? DateFormat.jm().parse(t.startTime!)
+                                  : null;
+                          final endDT =
+                              t.endTime != null && t.endTime!.isNotEmpty
+                                  ? DateFormat.jm().parse(t.endTime!)
+                                  : null;
+
+                          if (startDT != null && endDT != null) {
+                            final st = DateTime(today.year, today.month,
+                                today.day, startDT.hour, startDT.minute);
+                            final en = DateTime(today.year, today.month,
+                                today.day, endDT.hour, endDT.minute);
+
+                            if (now.isAfter(en)) {
+                              normalizedStatus = 'overdue';
+                            } else if (now.isAfter(st) && now.isBefore(en)) {
+                              normalizedStatus = 'in_progress';
+                            } else {
+                              normalizedStatus = 'todo';
+                            }
                           } else {
-                            normalized = 'todo';
+                            normalizedStatus = 'todo';
                           }
+                        } else {
+                          normalizedStatus = 'todo';
                         }
 
                         final String start =
@@ -422,7 +402,7 @@ class _SchedulePageState extends State<SchedulePage> {
                           subtitle: t.subtitle,
                           start: start,
                           end: end,
-                          status: normalized,
+                          status: normalizedStatus,
                           avatarColor: Colors.blue.shade300,
                           onClockTap: () => _setTaskTime(t),
                         );
@@ -437,12 +417,14 @@ class _SchedulePageState extends State<SchedulePage> {
   }
 }
 
+// --- Classe DayItem interne ---
 class _DayItem {
   final String label;
-  final DateTime date;
-  const _DayItem(this.label, this.date);
+  final int day;
+  const _DayItem(this.label, this.day);
 }
 
+// --- Classe SheetHandle ---
 class _SheetHandle extends StatelessWidget {
   const _SheetHandle();
   @override

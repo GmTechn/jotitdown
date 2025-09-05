@@ -63,15 +63,15 @@ class _ListOfUsersState extends State<ListOfUsers> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel',
-                style:
-                    TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Cancel',
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete',
-                style:
-                    TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Delete',
+            ),
           ),
         ],
       ),
@@ -153,9 +153,9 @@ class _ListOfUsersState extends State<ListOfUsers> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel',
-                    style: TextStyle(
-                        color: Colors.blue, fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'Cancel',
+                ),
               ),
               TextButton(
                 onPressed: () async {
@@ -174,10 +174,10 @@ class _ListOfUsersState extends State<ListOfUsers> {
                   Navigator.pop(context);
                   _loadUsers();
                 },
-                child: const Text('Save',
-                    style: TextStyle(
-                        color: Colors.green, fontWeight: FontWeight.bold)),
-              )
+                child: const Text(
+                  'Save',
+                ),
+              ),
             ],
           ),
         );

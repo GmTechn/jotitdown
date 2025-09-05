@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class MyScheduleCard extends StatelessWidget {
   const MyScheduleCard({
@@ -18,52 +17,37 @@ class MyScheduleCard extends StatelessWidget {
   final String start;
   final String end;
   final String subtitle;
-  final String status; // 'todo' | 'in_progress' | 'done'
+  final String status; // 'todo' | 'in_progress' | 'done' | 'overdue'
   final Color avatarColor;
   final VoidCallback? onClockTap;
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
+    IconData statusIcon;
+    Color statusColor;
 
-    DateTime? _parse(String t) {
-      if (t.isEmpty || t == '--:--') return null;
-      try {
-        return DateFormat.jm().parse(t);
-      } catch (_) {
-        return null;
-      }
-    }
+    //---- Switching between colors depending on the status of the app----
 
-    final startDT = _parse(start);
-    final endDT = _parse(end);
-
-    IconData statusIcon = Icons.radio_button_unchecked;
-    Color statusColor = Colors.grey;
-
-    if (status == 'done') {
-      statusIcon = Icons.check_circle;
-      statusColor = Colors.green;
-    } else if (startDT != null && endDT != null) {
-      final today = DateTime(now.year, now.month, now.day);
-      final st = DateTime(
-          today.year, today.month, today.day, startDT.hour, startDT.minute);
-      final en = DateTime(
-          today.year, today.month, today.day, endDT.hour, endDT.minute);
-
-      if (now.isAfter(en)) {
-        statusIcon = Icons.cancel;
-        statusColor = Colors.red;
-      } else if (now.isAfter(st) && now.isBefore(en)) {
+    switch (status) {
+      case 'done':
+        statusIcon = Icons.check_circle;
+        statusColor = Colors.green;
+        break;
+      case 'in_progress':
         statusIcon = Icons.access_time;
         statusColor = Colors.orange;
-      } else {
+        break;
+      case 'overdue':
+        statusIcon = Icons.cancel;
+        statusColor = Colors.red;
+        break;
+      //Default status is when the task is 'to do'
+      //meaning if I push a task to the next day,
+      //it would be greyed out
+
+      default:
         statusIcon = Icons.circle_outlined;
         statusColor = Colors.grey;
-      }
-    } else {
-      statusIcon = Icons.circle_outlined;
-      statusColor = Colors.grey;
     }
 
     return Container(
@@ -85,9 +69,9 @@ class MyScheduleCard extends StatelessWidget {
           InkWell(
             onTap: onClockTap,
             borderRadius: BorderRadius.circular(8),
-            child: Tooltip(
+            child: const Tooltip(
               message: "Set the time for your task",
-              child: const Icon(CupertinoIcons.clock, color: Colors.black54),
+              child: Icon(CupertinoIcons.clock, color: Colors.black54),
             ),
           ),
           const SizedBox(width: 10),
