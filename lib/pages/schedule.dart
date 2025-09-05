@@ -1,9 +1,14 @@
 import 'package:flutter/cupertino.dart';
+
 import 'package:flutter/material.dart';
+
 import 'package:intl/intl.dart';
+
 import 'package:notesapp/components/mynavbar.dart';
 import 'package:notesapp/components/myschedulecard.dart';
+
 import 'package:notesapp/management/database.dart';
+
 import 'package:notesapp/models/task.dart';
 
 class SchedulePage extends StatefulWidget {
@@ -15,18 +20,32 @@ class SchedulePage extends StatefulWidget {
 }
 
 class _SchedulePageState extends State<SchedulePage> {
+//Database calling
+
   final DatabaseManager _db = DatabaseManager();
+
+//generating an index to switch between days
+//starting from day 0 to +1 each day
   int selectedDayIndex = 0;
+
+//Dayitem that would display a label "Mon, Tue" + the 4 days of the
+//current week
+
   late List<_DayItem> _days;
+
+//List of all task to be displayed when called from the database
 
   List<Task> _allTasks = [];
 
+//state initialisation
   @override
   void initState() {
     super.initState();
     _days = _generateDays();
     _loadAllTasks();
   }
+
+//generating days 4 at a time plus the index talked about earlier on
 
   List<_DayItem> _generateDays() {
     final today = DateTime.now();
@@ -36,6 +55,8 @@ class _SchedulePageState extends State<SchedulePage> {
       return _DayItem(label, date.day);
     });
   }
+
+//switching to display labels according to days
 
   String _weekdayLabel(int weekday) {
     switch (weekday) {
@@ -58,6 +79,8 @@ class _SchedulePageState extends State<SchedulePage> {
     }
   }
 
+//loading all tasks from task.dart/database
+
   Future<void> _loadAllTasks() async {
     final tasks = await _db.getTasksForUser(widget.email);
     setState(() {
@@ -74,6 +97,9 @@ class _SchedulePageState extends State<SchedulePage> {
       return null;
     }
   }
+
+//Choosing to only get the task of the day and displaying it
+//by targeting a specific day = today = current day
 
   List<Task> get _tasksForSelectedDay {
     final targetDay = _days[selectedDayIndex].day;
@@ -97,6 +123,11 @@ class _SchedulePageState extends State<SchedulePage> {
 
     return filtered;
   }
+
+//setting the time for each task and parsing them to string
+//for display in a AM and PM format
+//Generating a Time picker clock as well which
+//won't allow the end time to be < than the start time of a task
 
   Future<void> _setTaskTime(Task task) async {
     if (task.status.toLowerCase() == 'done') return;
@@ -170,6 +201,8 @@ class _SchedulePageState extends State<SchedulePage> {
                 return;
               }
 
+              ///---updating a task (time) after time has been set----
+
               await _db.updateTask(
                 id: task.id!,
                 status: task.status,
@@ -190,6 +223,9 @@ class _SchedulePageState extends State<SchedulePage> {
                 await _loadAllTasks();
               }
             }
+
+            //---- Generating the bottom modal sheet widgets----
+            //a handle and listTiles
 
             return Padding(
               padding: EdgeInsets.only(
@@ -243,7 +279,6 @@ class _SchedulePageState extends State<SchedulePage> {
                         },
                         child: const Text(
                           'Clear',
-                          style: TextStyle(color: Colors.red),
                         ),
                       ),
                       const Spacer(),
@@ -265,7 +300,7 @@ class _SchedulePageState extends State<SchedulePage> {
 
   @override
   Widget build(BuildContext context) {
-    final pillColor = const Color(0xff6D5DF6);
+    final pillColor = const Color(0xff050c20);
 
     return Scaffold(
       appBar: AppBar(
@@ -314,7 +349,7 @@ class _SchedulePageState extends State<SchedulePage> {
                             Text(
                               _days[i].label,
                               style: TextStyle(
-                                color: isSel ? Colors.white : Colors.black54,
+                                color: isSel ? Colors.white : Color(0xff050c20),
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -322,7 +357,7 @@ class _SchedulePageState extends State<SchedulePage> {
                             Text(
                               _days[i].day.toString(),
                               style: TextStyle(
-                                color: isSel ? Colors.white : Colors.black87,
+                                color: isSel ? Colors.white : Color(0xff050c20),
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),

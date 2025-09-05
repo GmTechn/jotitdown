@@ -1,21 +1,16 @@
 import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
-
 import 'package:flutter/material.dart';
-
 import 'package:notesapp/components/mybutton.dart';
 import 'package:notesapp/components/mynavbar.dart';
-
 import 'package:notesapp/management/database.dart';
 import 'package:notesapp/management/listofusers.dart';
-
 import 'package:notesapp/models/users.dart';
 import 'package:notesapp/models/task.dart';
-
 import 'package:notesapp/pages/profile.dart';
 import 'package:notesapp/pages/schedule.dart';
 import 'package:notesapp/pages/tasks.dart';
+import 'package:intl/intl.dart';
 
 class Dashboard extends StatefulWidget {
   final String email;
@@ -33,12 +28,22 @@ class _DashboardState extends State<Dashboard> {
   int overdueCount = 0;
   int totalTasks = 0;
   int completedToday = 0;
+
+  Task? overdueTask;
+  Task? inProgressTask;
   Task? nextTask;
 
   @override
   void initState() {
     super.initState();
     _loadUser();
+    _loadTasks();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Force refresh when coming back to the page
     _loadTasks();
   }
 
@@ -53,21 +58,27 @@ class _DashboardState extends State<Dashboard> {
   Future<void> _loadTasks() async {
     await _databaseManager.initialisation();
     final tasks = await _databaseManager.getTasksForUser(widget.email);
-
     final now = DateTime.now();
 
     int overdue = 0;
     int completed = 0;
-    Task? next;
+    Task? overdueT;
+    Task? inProgressT;
+    Task? nextT;
 
     for (var task in tasks) {
       final dueDate = task.date;
       final isDone = task.status.toLowerCase() == "done";
 
+      // Overdue
       if (!isDone && dueDate.isBefore(now)) {
         overdue++;
+        if (overdueT == null || dueDate.isBefore(overdueT.date)) {
+          overdueT = task;
+        }
       }
 
+      // Completed today
       if (isDone &&
           dueDate.year == now.year &&
           dueDate.month == now.month &&
@@ -75,9 +86,19 @@ class _DashboardState extends State<Dashboard> {
         completed++;
       }
 
+      // In progress today (task is today but not overdue)
+      if (!isDone &&
+          dueDate.isAfter(now.subtract(const Duration(minutes: 1))) &&
+          dueDate.isBefore(now.add(const Duration(hours: 24)))) {
+        if (inProgressT == null || dueDate.isBefore(inProgressT.date)) {
+          inProgressT = task;
+        }
+      }
+
+      // Next task (future task)
       if (!isDone && dueDate.isAfter(now)) {
-        if (next == null || dueDate.isBefore(next.date)) {
-          next = task;
+        if (nextT == null || dueDate.isBefore(nextT.date)) {
+          nextT = task;
         }
       }
     }
@@ -86,8 +107,19 @@ class _DashboardState extends State<Dashboard> {
       overdueCount = overdue;
       totalTasks = tasks.length;
       completedToday = completed;
-      nextTask = next;
+      overdueTask = overdueT;
+      inProgressTask = inProgressT;
+      nextTask = nextT;
     });
+  }
+
+  void _openTasksPage(String filter) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TasksPage(email: widget.email),
+      ),
+    ).then((_) => _loadTasks());
   }
 
   @override
@@ -262,51 +294,79 @@ class _DashboardState extends State<Dashboard> {
 
                 const SizedBox(height: 18),
 
-                // ALERT CARD
-                if (overdueCount > 0)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade50,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: Colors.red.shade200),
-                    ),
-                    child: Text(
-                      "⚠️ You have $overdueCount overdue tasks. Please review them!",
-                      style: const TextStyle(
-                          color: Colors.red, fontWeight: FontWeight.bold),
+                // OVERDUE
+                if (overdueTask != null)
+                  GestureDetector(
+                    onTap: () => _openTasksPage("Overdue"),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: Colors.red.shade200),
+                      ),
+                      child: Text(
+                        "⚠️ ${overdueTask!.title} is overdue! Due: ${DateFormat.yMMMd().add_jm().format(overdueTask!.date)}",
+                        style: const TextStyle(
+                            color: Colors.red, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
 
                 const SizedBox(height: 18),
 
-                // NEXT TASK CARD
-                if (nextTask != null)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: Colors.blue.shade200),
+                // IN PROGRESS
+                if (inProgressTask != null)
+                  GestureDetector(
+                    onTap: () => _openTasksPage("In progress"),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: Colors.orange.shade200),
+                      ),
+                      child: Text(
+                        "⏰ It's time for: ${inProgressTask!.title} (Today)",
+                        style: const TextStyle(
+                            color: Colors.orange, fontWeight: FontWeight.bold),
+                      ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text("Next Task",
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xff050c20))),
-                        const SizedBox(height: 8),
-                        Text(nextTask!.title,
-                            style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.w600)),
-                        Text(
-                          "Due: ${nextTask!.date}",
-                          style: const TextStyle(color: Colors.black54),
-                        ),
-                      ],
+                  ),
+
+                const SizedBox(height: 18),
+
+                // NEXT TASK
+                if (nextTask != null)
+                  GestureDetector(
+                    onTap: () => _openTasksPage("To do"),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: Colors.blue.shade200),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text("Next Task",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xff050c20))),
+                          const SizedBox(height: 8),
+                          Text(nextTask!.title,
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w600)),
+                          Text(
+                            "Due: ${DateFormat.yMMMd().add_jm().format(nextTask!.date)}",
+                            style: const TextStyle(color: Colors.black54),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
 

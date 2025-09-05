@@ -6,8 +6,13 @@ import 'package:notesapp/management/database.dart';
 import 'package:notesapp/models/task.dart';
 
 class TasksPage extends StatefulWidget {
-  const TasksPage({super.key, required this.email});
+  const TasksPage({
+    super.key,
+    required this.email,
+    this.initialFilter = "All",
+  });
   final String email;
+  final String initialFilter;
 
   @override
   State<TasksPage> createState() => _TasksPageState();
@@ -15,14 +20,14 @@ class TasksPage extends StatefulWidget {
 
 class _TasksPageState extends State<TasksPage> {
   final DatabaseManager _dbManager = DatabaseManager();
+  late String selectedFilter;
 
   List<Task> tasks = [];
-
-  String selectedFilter = "All";
 
   @override
   void initState() {
     super.initState();
+    selectedFilter = widget.initialFilter;
     _loadTasks();
   }
 
