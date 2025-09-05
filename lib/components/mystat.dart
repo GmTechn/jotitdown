@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class StatTile extends StatelessWidget {
@@ -6,13 +7,13 @@ class StatTile extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
-    required this.containerColor,
+    required this.iconColor,
   });
 
   final IconData icon;
   final String label;
   final String value;
-  Color containerColor;
+  Color iconColor;
 
   @override
   Widget build(BuildContext context) {
@@ -37,10 +38,9 @@ class StatTile extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.grey.shade100,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: containerColor),
               ),
               padding: const EdgeInsets.all(10),
-              child: Icon(icon, color: const Color(0xff050c20)),
+              child: Icon(icon, color: iconColor),
             ),
             const SizedBox(width: 12),
             Column(

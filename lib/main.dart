@@ -14,7 +14,7 @@ void main() async {
 
   // ✅ Clear database during testing
 
-  await dbManager.clearDatabase();
+  //await dbManager.clearDatabase();
 
   await dbManager.initialisation();
 
