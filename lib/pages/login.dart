@@ -6,6 +6,7 @@ import 'package:notesapp/components/mytextfield.dart';
 import 'package:notesapp/management/database.dart';
 import 'package:notesapp/pages/forgotpass.dart';
 import 'package:notesapp/pages/signup.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -60,8 +61,16 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
+      // Sauvegarde l'email dans SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('loggedInEmail', email);
+
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, '/dashboard');
+      Navigator.pushReplacementNamed(
+        context,
+        '/dashboard',
+        arguments: {'email': email},
+      );
     } catch (e) {
       showErrorMessage("Login failed: $e");
     }

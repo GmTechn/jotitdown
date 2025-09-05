@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:notesapp/management/database.dart';
 import 'package:notesapp/pages/dashboard.dart';
 import 'package:notesapp/pages/login.dart';
@@ -11,18 +12,19 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final dbManager = DatabaseManager();
-
-  // ✅ Clear database during testing
-
-  //await dbManager.clearDatabase();
-
   await dbManager.initialisation();
 
-  runApp(const MyApp());
+//---check if the user is logged in
+
+  final prefs = await SharedPreferences.getInstance();
+  final savedEmail = prefs.getString('loggedInEmail');
+
+  runApp(MyApp(initialEmail: savedEmail));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final String? initialEmail;
+  const MyApp({super.key, this.initialEmail});
 
   @override
   Widget build(BuildContext context) {
@@ -32,10 +34,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      initialRoute: '/',
+      initialRoute: initialEmail == null ? '/' : '/dashboard',
       routes: {
         '/': (context) => const LoginPage(),
-        // You can handle navigation with email using onGenerateRoute
       },
       onGenerateRoute: (settings) {
         final args = settings.arguments as Map<String, dynamic>?;
@@ -43,34 +44,32 @@ class MyApp extends StatelessWidget {
         switch (settings.name) {
           case '/signup':
             return MaterialPageRoute(
-              builder: (_) => SignUpPage(),
+              builder: (_) => const SignUpPage(),
             );
           case '/dashboard':
             return MaterialPageRoute(
               builder: (_) => Dashboard(
-                email: args?['email'] ?? '',
+                email: args?['email'] ?? initialEmail ?? '',
               ),
             );
-
           case '/transactions':
             return MaterialPageRoute(
               builder: (_) => SchedulePage(
-                email: args?['email'] ?? '',
+                email: args?['email'] ?? initialEmail ?? '',
               ),
             );
           case '/mycards':
             return MaterialPageRoute(
               builder: (_) => TasksPage(
-                email: args?['email'] ?? '',
+                email: args?['email'] ?? initialEmail ?? '',
               ),
             );
           case '/profile':
             return MaterialPageRoute(
               builder: (_) => ProfilePage(
-                email: args?['email'],
+                email: args?['email'] ?? initialEmail ?? '',
               ),
             );
-
           default:
             return null;
         }
