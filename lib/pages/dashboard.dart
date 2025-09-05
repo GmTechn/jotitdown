@@ -23,15 +23,14 @@ class Dashboard extends StatefulWidget {
 
 class _DashboardState extends State<Dashboard> {
   final DatabaseManager _databaseManager = DatabaseManager();
+
   AppUser? _currentUser;
 
   int overdueCount = 0;
   int totalTasks = 0;
   int completedToday = 0;
 
-  Task? overdueTask;
-  Task? inProgressTask;
-  Task? nextTask;
+  List<_TaskStatusItem> todayTasks = [];
 
   @override
   void initState() {
@@ -43,7 +42,6 @@ class _DashboardState extends State<Dashboard> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Force refresh when coming back to the page
     _loadTasks();
   }
 
@@ -62,58 +60,81 @@ class _DashboardState extends State<Dashboard> {
 
     int overdue = 0;
     int completed = 0;
-    Task? overdueT;
-    Task? inProgressT;
-    Task? nextT;
+    List<_TaskStatusItem> computed = [];
 
     for (var task in tasks) {
-      final dueDate = task.date;
+      final taskDate = task.date;
       final isDone = task.status.toLowerCase() == "done";
 
-      // Overdue
-      if (!isDone && dueDate.isBefore(now)) {
-        overdue++;
-        if (overdueT == null || dueDate.isBefore(overdueT.date)) {
-          overdueT = task;
+      // only today's tasks
+      if (taskDate.year == now.year &&
+          taskDate.month == now.month &&
+          taskDate.day == now.day) {
+        if (isDone) {
+          completed++;
+          continue;
         }
-      }
 
-      // Completed today
-      if (isDone &&
-          dueDate.year == now.year &&
-          dueDate.month == now.month &&
-          dueDate.day == now.day) {
-        completed++;
-      }
+        DateTime? start;
+        DateTime? end;
 
-      // In progress today (task is today but not overdue)
-      if (!isDone &&
-          dueDate.isAfter(now.subtract(const Duration(minutes: 1))) &&
-          dueDate.isBefore(now.add(const Duration(hours: 24)))) {
-        if (inProgressT == null || dueDate.isBefore(inProgressT.date)) {
-          inProgressT = task;
+        try {
+          if (task.startTime != null && task.startTime!.isNotEmpty) {
+            final parsed = DateFormat.jm().parse(task.startTime!);
+            start = DateTime(
+                now.year, now.month, now.day, parsed.hour, parsed.minute);
+          }
+          if (task.endTime != null && task.endTime!.isNotEmpty) {
+            final parsed = DateFormat.jm().parse(task.endTime!);
+            end = DateTime(
+                now.year, now.month, now.day, parsed.hour, parsed.minute);
+          }
+        } catch (_) {}
+
+        String status;
+        Color color;
+        if (end != null && end.isBefore(now)) {
+          status = "overdue";
+          color = Colors.red;
+          overdue++;
+        } else if (start != null &&
+            end != null &&
+            now.isAfter(start) &&
+            now.isBefore(end)) {
+          status = "in_progress";
+          color = Colors.orange;
+        } else if (start != null && start.isAfter(now)) {
+          status = "next";
+          color = Colors.blue;
+        } else {
+          status = "todo";
+          color = Colors.grey;
         }
-      }
 
-      // Next task (future task)
-      if (!isDone && dueDate.isAfter(now)) {
-        if (nextT == null || dueDate.isBefore(nextT.date)) {
-          nextT = task;
-        }
+        computed.add(_TaskStatusItem(task: task, status: status, color: color));
       }
     }
+
+    // sort by startTime (or date if no startTime)
+    computed.sort((a, b) {
+      DateTime aTime = a.task.startTime != null && a.task.startTime!.isNotEmpty
+          ? DateFormat.jm().parse(a.task.startTime!)
+          : a.task.date;
+      DateTime bTime = b.task.startTime != null && b.task.startTime!.isNotEmpty
+          ? DateFormat.jm().parse(b.task.startTime!)
+          : b.task.date;
+      return aTime.compareTo(bTime);
+    });
 
     setState(() {
       overdueCount = overdue;
       totalTasks = tasks.length;
       completedToday = completed;
-      overdueTask = overdueT;
-      inProgressTask = inProgressT;
-      nextTask = nextT;
+      todayTasks = computed;
     });
   }
 
-  void _openTasksPage(String filter) {
+  void _openTasksPage() {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -294,81 +315,32 @@ class _DashboardState extends State<Dashboard> {
 
                 const SizedBox(height: 18),
 
-                // OVERDUE
-                if (overdueTask != null)
-                  GestureDetector(
-                    onTap: () => _openTasksPage("Overdue"),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade50,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: Colors.red.shade200),
-                      ),
-                      child: Text(
-                        "⚠️ ${overdueTask!.title} is overdue! Due: ${DateFormat.yMMMd().add_jm().format(overdueTask!.date)}",
-                        style: const TextStyle(
-                            color: Colors.red, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-
-                const SizedBox(height: 18),
-
-                // IN PROGRESS
-                if (inProgressTask != null)
-                  GestureDetector(
-                    onTap: () => _openTasksPage("In progress"),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade50,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: Colors.orange.shade200),
-                      ),
-                      child: Text(
-                        "⏰ It's time for: ${inProgressTask!.title} (Today)",
-                        style: const TextStyle(
-                            color: Colors.orange, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-
-                const SizedBox(height: 18),
-
-                // NEXT TASK
-                if (nextTask != null)
-                  GestureDetector(
-                    onTap: () => _openTasksPage("To do"),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: Colors.blue.shade200),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text("Next Task",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xff050c20))),
-                          const SizedBox(height: 8),
-                          Text(nextTask!.title,
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w600)),
-                          Text(
-                            "Due: ${DateFormat.yMMMd().add_jm().format(nextTask!.date)}",
-                            style: const TextStyle(color: Colors.black54),
+                // TASKS ORDERED BY TIME
+                Column(
+                  children: todayTasks.map((item) {
+                    return GestureDetector(
+                      onTap: _openTasksPage,
+                      child: Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: item.color.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(18),
+                          border:
+                              Border.all(color: item.color.withOpacity(0.4)),
+                        ),
+                        child: Text(
+                          _statusLabel(item),
+                          style: TextStyle(
+                            color: item.color,
+                            fontWeight: FontWeight.bold,
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
+                    );
+                  }).toList(),
+                ),
 
                 const SizedBox(height: 28),
 
@@ -400,6 +372,32 @@ class _DashboardState extends State<Dashboard> {
       ),
     );
   }
+
+  String _statusLabel(_TaskStatusItem item) {
+    final formatted =
+        (item.task.startTime != null && item.task.startTime!.isNotEmpty)
+            ? item.task.startTime
+            : DateFormat.jm().format(item.task.date);
+
+    switch (item.status) {
+      case "overdue":
+        return "⚠️ ${item.task.title} is overdue! Ended at $formatted";
+      case "in_progress":
+        return "⏰ It's time for: ${item.task.title} ($formatted)";
+      case "next":
+        return "👉 Next: ${item.task.title} at $formatted";
+      default:
+        return "${item.task.title} (No time set)";
+    }
+  }
+}
+
+class _TaskStatusItem {
+  final Task task;
+  final String status;
+  final Color color;
+  _TaskStatusItem(
+      {required this.task, required this.status, required this.color});
 }
 
 class _StatTile extends StatelessWidget {
