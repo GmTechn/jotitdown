@@ -1,5 +1,6 @@
 ---
-
+Version Française 🇫🇷
+---
 # 📌 Projet Final : **Application Jot It Down**
 
 🔗 **Lien GitHub** : [https://github.com/GmTechn/jotitdown](https://github.com/GmTechn/jotitdown)
@@ -119,3 +120,128 @@ Prévu pour permettre à l’utilisateur de recréer un mot de passe via son ema
     * [Chaîne YouTube](https://www.youtube.com/@createdbykoko)
 
 ---
+English Version 🇬🇧
+---
+
+
+# 📌 Final Project: **Jot It Down Application**
+
+🔗 **GitHub Link**: [https://github.com/GmTechn/jotitdown](https://github.com/GmTechn/jotitdown)
+
+---
+
+## 📖 Description
+
+**Jot It Down** is a simple and intuitive application designed to help users manage their daily tasks.
+It allows easy tracking of overdue, ongoing, and upcoming tasks.
+
+---
+
+## 📱 Main Features
+
+### 1. **Login**
+
+* Allows existing users to sign in with their account.
+
+---
+
+### 2. **Sign Up (Create an Account)**
+
+* Enables new users to register and create an account.
+
+---
+
+### 3. **Dashboard**
+
+Provides an overview of the current task status.
+It includes:
+
+* A **profile button** displaying the user’s name.
+* A **notification bell** redirecting to overdue tasks.
+* The **total number of tasks/notes** created and the **total number of tasks completed** for the day.
+* An **encouragement message**, reminding the user of how many tasks have been completed today.
+* A task summary showing:
+
+  * **Overdue tasks**
+  * **Ongoing tasks**
+  * **Upcoming tasks** (based on scheduled hours)
+
+---
+
+### 4. **Tasks**
+
+Page to record tasks with their status and date.
+
+* Add a new task using the **+ button**.
+* Task details include:
+
+  * Status (*To do, In progress, Done*)
+  * Title and subtitle
+  * Date
+
+➡️ Multiple created tasks appear on this page with a **color code for each status**:
+
+* 🔴 Red → *To do*
+
+* 🟠 Orange → *In progress*
+
+* 🟢 Green → *Done*
+
+* **Filters** allow displaying tasks based on their status.
+
+---
+
+### 5. **Schedule**
+
+Lists all tasks according to their corresponding dates.
+
+Features:
+
+* Define a **start and end time** for each task (using the clock icon when creating a task).
+* Display tasks with a **color-coded status**:
+
+  * 🔴 Red → Overdue
+  * 🟠 Orange → In progress (during its time slot)
+  * 🟢 Green → Done
+  * ⚪ Grey → Scheduled for later in the day
+* Navigate between days using the **filters** at the top of the page.
+
+---
+
+### 6. **Profile**
+
+Allows users to manage their personal information:
+
+* Change profile picture
+* Update personal details
+
+  * **Update**: save changes
+  * **Cancel**: discard changes
+* **Logout** (top of the page): sign out of the app
+
+---
+
+### 7. **Forgot Password** (not yet implemented)
+
+Planned feature to allow users to reset their password via email by receiving a reset link.
+
+---
+
+## 📚 Resources Used
+
+* **Wireframe & Design Inspiration:**
+  [Dribbble – Note App UX/UI Design](https://dribbble.com/shots/24116561-Note-App-UXUI-Design)
+
+* **Navigation Bar Code:**
+  [FlutterBricks](https://www.flutterbricks.com/preview)
+
+* **ListTiles, filter logic & scheduling implementation:**
+
+  * ChatGPT
+  * Flutter developer **Mitch Koko**
+
+    * [YouTube Channel](https://www.youtube.com/@createdbykoko)
+
+---
+
+
