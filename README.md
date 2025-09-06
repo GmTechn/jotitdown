@@ -1,6 +1,3 @@
-Parfait 🙌 Merci pour ton texte.
-Je vais garder tout ce que tu as dit, mais le **restructurer**, corriger l’orthographe, améliorer la formulation et mettre en **bullet points clairs** pour que ton **README** soit pro et lisible.
-
 ---
 
 # 📌 Projet Final : **Application Jot It Down**
