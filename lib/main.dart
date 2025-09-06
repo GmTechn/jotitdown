@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      initialRoute: initialEmail == null ? '/' : '/dashboard',
+      initialRoute: initialEmail == null ? '/' : '/',
       routes: {
         '/': (context) => const LoginPage(),
       },

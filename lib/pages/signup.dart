@@ -20,6 +20,8 @@ class _SignUpPageState extends State<SignUpPage> {
   final lnameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final confimrpasswordController = TextEditingController();
+
   final phoneController = TextEditingController();
 
   final DatabaseManager _dbManager = DatabaseManager();
@@ -40,7 +42,8 @@ class _SignUpPageState extends State<SignUpPage> {
     final fname = fnameController.text.trim();
     final lname = lnameController.text.trim();
     final email = emailController.text.trim();
-    final password = passwordController.text.trim();
+    var password = passwordController.text.trim();
+    final confirmPassword = confimrpasswordController.text.trim();
     final phone = phoneController.text.trim();
 
     if (fname.isEmpty || lname.isEmpty || email.isEmpty || password.isEmpty) {
@@ -51,6 +54,13 @@ class _SignUpPageState extends State<SignUpPage> {
     if (!RegExp(r"^[\w\.-]+@[\w\.-]+\.\w+$").hasMatch(email)) {
       showMessage("Please enter a valid email address.");
       return;
+    }
+
+    if (confirmPassword != password) {
+      showMessage('Passwords do not match!');
+      return;
+    } else {
+      password = confirmPassword;
     }
 
     try {
@@ -114,32 +124,51 @@ class _SignUpPageState extends State<SignUpPage> {
                 controller: fnameController,
                 hintText: 'First Name',
                 obscureText: false,
-                leadingIcon:
-                    const Icon(Icons.person, color: Color(0xff050c20))),
+                leadingIcon: const Icon(CupertinoIcons.person_fill,
+                    color: Color(0xff050c20))),
             const SizedBox(height: 10),
             Mytextfield(
                 controller: lnameController,
                 hintText: 'Last Name',
                 obscureText: false,
-                leadingIcon:
-                    const Icon(Icons.person, color: Color(0xff050c20))),
+                leadingIcon: const Icon(CupertinoIcons.person_fill,
+                    color: Color(0xff050c20))),
             const SizedBox(height: 10),
             Mytextfield(
                 controller: emailController,
                 hintText: 'Email',
                 obscureText: false,
-                leadingIcon: const Icon(Icons.email, color: Color(0xff050c20))),
+                leadingIcon: const Icon(CupertinoIcons.envelope_fill,
+                    color: Color(0xff050c20))),
             const SizedBox(height: 10),
             Mytextfield(
               controller: passwordController,
               hintText: 'Password',
               obscureText: !_isPasswordVisible,
-              leadingIcon: const Icon(Icons.lock, color: Color(0xff050c20)),
+              leadingIcon: const Icon(CupertinoIcons.lock_fill,
+                  color: Color(0xff050c20)),
               trailingIcon: IconButton(
                 icon: Icon(
                     _isPasswordVisible
-                        ? Icons.visibility
-                        : Icons.visibility_off,
+                        ? CupertinoIcons.eye_fill
+                        : CupertinoIcons.eye_slash_fill,
+                    color: const Color(0xff050c20)),
+                onPressed: () =>
+                    setState(() => _isPasswordVisible = !_isPasswordVisible),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Mytextfield(
+              controller: confimrpasswordController,
+              hintText: 'Confirm Password',
+              obscureText: !_isPasswordVisible,
+              leadingIcon: const Icon(CupertinoIcons.lock_fill,
+                  color: Color(0xff050c20)),
+              trailingIcon: IconButton(
+                icon: Icon(
+                    _isPasswordVisible
+                        ? CupertinoIcons.eye_fill
+                        : CupertinoIcons.eye_slash_fill,
                     color: const Color(0xff050c20)),
                 onPressed: () =>
                     setState(() => _isPasswordVisible = !_isPasswordVisible),
@@ -150,7 +179,8 @@ class _SignUpPageState extends State<SignUpPage> {
               controller: phoneController,
               hintText: 'Phone (optional)',
               obscureText: false,
-              leadingIcon: const Icon(Icons.phone, color: Color(0xff050c20)),
+              leadingIcon: const Icon(CupertinoIcons.phone_fill,
+                  color: Color(0xff050c20)),
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             ),

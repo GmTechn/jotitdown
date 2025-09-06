@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:notesapp/components/mybutton.dart';
 import 'package:notesapp/components/mytextfield.dart';
@@ -39,8 +40,7 @@ class ForgotPasswordPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text(
           'R E S E T',
-          style:
-              TextStyle(fontWeight: FontWeight.bold, color: Color(0xff050c20)),
+          style: TextStyle(color: Color(0xff050c20)),
         ),
       ),
       body: Padding(
@@ -48,7 +48,7 @@ class ForgotPasswordPage extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 40),
-            const Icon(Icons.lock, size: 40),
+            const Icon(CupertinoIcons.lock_fill, size: 40),
             const SizedBox(height: 20),
             const Text(
               'Enter your email to reset password:',
@@ -59,7 +59,7 @@ class ForgotPasswordPage extends StatelessWidget {
               controller: emailController,
               hintText: 'Email',
               obscureText: false,
-              leadingIcon: const Icon(Icons.email),
+              leadingIcon: const Icon(CupertinoIcons.envelope_fill),
             ),
             const SizedBox(height: 40),
             MyButton(

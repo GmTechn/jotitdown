@@ -112,7 +112,8 @@ class _LoginPageState extends State<LoginPage> {
             controller: emailController,
             hintText: 'Email',
             obscureText: false,
-            leadingIcon: const Icon(Icons.email, color: Color(0xff050c20)),
+            leadingIcon: const Icon(CupertinoIcons.envelope_fill,
+                color: Color(0xff050c20)),
           ),
           const SizedBox(height: 20),
           Mytextfield(
@@ -120,7 +121,7 @@ class _LoginPageState extends State<LoginPage> {
             hintText: 'Password',
             obscureText: !_isPasswordVisible,
             leadingIcon:
-                const Icon(Icons.lock_outlined, color: Color(0xff050c20)),
+                const Icon(CupertinoIcons.lock_fill, color: Color(0xff050c20)),
           ),
           const SizedBox(height: 20),
           Row(
@@ -133,7 +134,9 @@ class _LoginPageState extends State<LoginPage> {
                   });
                 },
                 icon: Icon(
-                  _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                  _isPasswordVisible
+                      ? CupertinoIcons.eye_fill
+                      : CupertinoIcons.eye_slash_fill,
                   color: const Color(0xff050c20),
                 ),
               ),

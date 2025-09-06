@@ -339,6 +339,9 @@ class _DashboardState extends State<Dashboard> {
                         label: 'Notes',
                         value: '$totalTasks',
                         iconColor: Colors.orange),
+                    SizedBox(
+                      width: 6,
+                    ),
                     StatTile(
                         icon: CupertinoIcons.checkmark_seal_fill,
                         label: 'Tasks',
