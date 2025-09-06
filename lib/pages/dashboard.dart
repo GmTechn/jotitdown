@@ -271,7 +271,7 @@ class _DashboardState extends State<Dashboard> {
                               _currentUser != null
                                   ? "${_currentUser!.fname} ${_currentUser!.lname}"
                                   : "Guest",
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                                 color: Color(0xff050c20),
