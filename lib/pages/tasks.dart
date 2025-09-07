@@ -11,7 +11,13 @@ class TasksPage extends StatefulWidget {
     required this.email,
     this.initialFilter = "All",
   });
+
+  //email to passed accross page
+  //pour bien display les info corresponding
+
   final String email;
+
+  //filters used to go from "status listTile(Dashboard) -> Filtered Page"
   final String initialFilter;
 
   @override
@@ -19,10 +25,19 @@ class TasksPage extends StatefulWidget {
 }
 
 class _TasksPageState extends State<TasksPage> {
+//---Generating database instance
+
   final DatabaseManager _dbManager = DatabaseManager();
+//---Selection of the filter depending on its status "done", "in progress"
+//and etc...
+
   late String selectedFilter;
 
+//List of tasks to display
+
   List<Task> tasks = [];
+
+//initialising the state
 
   @override
   void initState() {
@@ -30,6 +45,11 @@ class _TasksPageState extends State<TasksPage> {
     selectedFilter = widget.initialFilter;
     _loadTasks();
   }
+
+//loading the tasks stored in the database
+//by making use of the getTasksForUser function
+//that gets a specific task saved
+//dans chaque user en particulier
 
   Future<void> _loadTasks() async {
     final fetchedTasks =
@@ -39,7 +59,10 @@ class _TasksPageState extends State<TasksPage> {
     });
   }
 
-  // Create or edit task dialog
+  // Create or edit task dialog that only has two statuses at first
+  //mais on rajoute le done after quand on sera entrain
+  //de edit the task
+
   void _showCreateTaskDialog({Task? task}) {
     final titleController = TextEditingController(text: task?.title ?? "");
     final subtitleController =
@@ -47,10 +70,17 @@ class _TasksPageState extends State<TasksPage> {
     String status = task?.status ?? "To do";
     DateTime? selectedDate = task?.date;
 
+//getting a task sous for the liste ou d'un item
+//si un item task n'est pas null on le rajoute on the tasks list
+
     final Set<String> itemsSet = {"To do", "In progress"};
     if (task != null && !itemsSet.contains(task.status))
       itemsSet.add(task.status);
     final itemsList = itemsSet.toList();
+
+//Show un alert dialog, qui est celui qui permet
+//de create and insert its containt
+////titre, sous-titre etc...
 
     showDialog(
       context: context,
@@ -121,6 +151,17 @@ class _TasksPageState extends State<TasksPage> {
                   ],
                 ),
               ),
+
+              //Quand le ListTile est selected les options
+              //de Edit , Cancel les changes ou resauver pop up
+              //si on efface , elle s'efface de la db, si on cancel you just pop
+              //the context, donc on reviens sur la paga preceeding
+              //si on click sur save c'est comme soit insert une nouvelle task
+              //ou encore la update .
+              //En gros on appelle the same alert dialog but if it's a new task
+              //the button says "Add", if it's an update , meaning tasks is not null
+              //the button devient save
+
               actions: [
                 if (task != null)
                   TextButton(
@@ -176,6 +217,7 @@ class _TasksPageState extends State<TasksPage> {
     );
   }
 
+//Displaying all tasks that have the selected filter "All"
   List<Task> get filteredTasks {
     if (selectedFilter == "All") return tasks;
     return tasks.where((t) => t.status == selectedFilter).toList();
@@ -239,26 +281,32 @@ class _TasksPageState extends State<TasksPage> {
       ),
       body: Column(
         children: [
-          // Filter Row (reduced)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                const Text('Filters'),
-                Wrap(
-                  spacing: 10,
-                  children: [
-                    _buildFilterButton("All"),
-                    _buildFilterButton("To do"),
-                    _buildFilterButton("In progress"),
-                    _buildFilterButton("Done")
-                  ],
-                ),
-              ],
+          const SizedBox(
+            height: 20,
+          ),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 25.0),
+              child: Row(
+                children: [
+                  const Text('Filters'),
+                  const SizedBox(
+                    width: 6,
+                  ),
+                  Wrap(
+                    spacing: 10,
+                    children: [
+                      _buildFilterButton("All"),
+                      _buildFilterButton("To do"),
+                      _buildFilterButton("In progress"),
+                      _buildFilterButton("Done")
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-
           Expanded(
             child: filteredTasks.isEmpty
                 ? _buildEmptyState()
@@ -283,12 +331,15 @@ class _TasksPageState extends State<TasksPage> {
       floatingActionButton: FloatingActionButton(
         tooltip: 'Add a new task',
         onPressed: () => _showCreateTaskDialog(),
-        backgroundColor: Color(0xff050c20),
+        backgroundColor: const Color(0xff050c20),
         child: const Icon(CupertinoIcons.add, color: Colors.white),
       ),
       bottomNavigationBar: MyNavBar(currentIndex: 2, email: widget.email),
     );
   }
+
+//Building the filters button that are on the top
+//they're gesture detectors
 
   Widget _buildFilterButton(String label) {
     final isSelected = selectedFilter == label;
@@ -297,19 +348,22 @@ class _TasksPageState extends State<TasksPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? Color(0xff050c20) : Colors.grey.shade200,
+          color: isSelected ? const Color(0xff050c20) : Colors.grey.shade200,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : Color(0xff050c20),
+            color: isSelected ? Colors.white : const Color(0xff050c20),
             fontWeight: FontWeight.w500,
           ),
         ),
       ),
     );
   }
+
+  //this returns a simple text that says no tasks yet
+  //when there ism't any
 
   Widget _buildEmptyState() {
     return const Center(

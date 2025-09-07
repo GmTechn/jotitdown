@@ -19,25 +19,41 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+//--- Generating textfield controllers
   final _fnameController = TextEditingController();
   final _lnameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
 
+//---Generating a file to locally store images, profile pictures
+//---Generating a string to hold the image string = photoPath
+//---Generating a user's instance
+
   File? _imageFile;
   String? _photoPath;
   AppUser? _user;
 
+//Generating a picker to pick images from both gallery and camera
+
   final _picker = ImagePicker();
+
+//---Generating an instance of the database
+
   final DatabaseManager _databaseManager = DatabaseManager();
 
+//--Checking is the user is logged in with a boolean
+
   bool _isLoading = false;
+
+//---Initialising state
 
   @override
   void initState() {
     super.initState();
     _loadProfile();
   }
+
+//---Disposing of the controllers after they held a value
 
   @override
   void dispose() {
@@ -48,28 +64,29 @@ class _ProfilePageState extends State<ProfilePage> {
     super.dispose();
   }
 
-  /// Load profile from DB. This method is defensive:
-  /// - It tries both possible DB getters (getAppUserByEmail / getUserByEmail)
-  ///   to be compatible with small variations in your DatabaseManager API.
-  /// - It DOES NOT clear existing values if DB returns null or empty fields.
-  /// - It only overwrites a text controller when the DB value is non-empty.
+//checking the state of the profile in the data
+//si le profile existe, it gets loaded with the recently saved data
+//en initializing la base de données
+
   Future<void> _loadProfile() async {
     setState(() => _isLoading = true);
 
-    // Try to (re)initialize DB if available (some DatabaseManager implementations
-    // expose `initialisation()` — calling it is safe if already initialized).
     try {
       await _databaseManager.initialisation();
-    } catch (_) {
-      // ignore if method doesn't exist or DB already initialized
-    }
+    } catch (_) {}
+
+//Getting an instance of the app user in the database
+//using the function getUserByEmail
+//to be sure to display les information correspondante au user
+//that we need to
+//and if we do not get any user on doit rien display
+//pas d'information
 
     AppUser? user;
     try {
       user = await _databaseManager.getUserByEmail(widget.email);
     } catch (_) {
       try {
-        // fallback name some implementations use
         user = await _databaseManager.getUserByEmail(widget.email);
       } catch (_) {
         user = null;
@@ -79,15 +96,20 @@ class _ProfilePageState extends State<ProfilePage> {
     if (!mounted) return;
 
     if (user != null) {
-      // Only overwrite fields when DB value is non-empty so we don't erase
-      // data that might be currently typed in UI.
+      //Lorsqu'on retrouve un user dans la database
+      //we display all data related to him
+      //coming from the controllers
+
       if ((user.fname ?? '').isNotEmpty) {
         _fnameController.text = user.fname;
       }
       if ((user.lname ?? '').isNotEmpty) {
         _lnameController.text = user.lname;
       }
-      // email is authoritative; prefer DB email if present, otherwise keep existing or widget.email
+
+      //Pour l'email on display celui qui est dans la database
+      //ou alors ce qu'on receuill du Sign up
+
       if ((user.email ?? '').isNotEmpty) {
         _emailController.text = user.email;
       } else if (_emailController.text.isEmpty) {
@@ -97,7 +119,9 @@ class _ProfilePageState extends State<ProfilePage> {
         _phoneController.text = user.phone;
       }
 
-      // Only set image if path exists and file exists on disk
+      // Set the image only if we have its path dans le file
+      //sinon si c'est empty on display le default avatar
+
       if (user.photoPath != null && user.photoPath!.isNotEmpty) {
         final f = File(user.photoPath!);
         if (f.existsSync()) {
@@ -108,14 +132,24 @@ class _ProfilePageState extends State<ProfilePage> {
 
       _user = user;
     } else {
-      // No DB user found: don't clear the UI. Ensure email field has widget.email.
+      //If there is no user found dans la database don't clear the UI.
+      //but ensure email field has widget.email
+      //so nothing remains empty
+
       if (_emailController.text.isEmpty && widget.email.isNotEmpty) {
         _emailController.text = widget.email;
       }
     }
 
+    //if the profile loads successfully
+    //le statut de isLoading devient faux parce qu'on a succeed
+    //to display the loaded user
+
     setState(() => _isLoading = false);
   }
+
+//----Generating the pick image function
+//---Picking the image from a source and setting it's quality to 70
 
   Future<void> _pickImage(ImageSource source) async {
     try {
@@ -126,7 +160,12 @@ class _ProfilePageState extends State<ProfilePage> {
           _photoPath = picked.path;
         });
 
-        // ✅ Persist immediately if user exists
+//Si le user is not null then on generate an instance de user
+//to whom you assign profile path that was just picked
+//and then on maj la database with the new path set
+//so when coming back we get the last set image
+//according to the info store in the db
+
         if (_user != null) {
           final updated = AppUser(
             id: _user!.id,
@@ -138,10 +177,14 @@ class _ProfilePageState extends State<ProfilePage> {
             photoPath: _photoPath ?? '',
           );
           await _databaseManager.updateAppUser(updated);
-          _user = updated; // keep in memory too
+          _user = updated;
         }
       }
     } catch (e) {
+      //debugprint is a function that send a message in the console
+      //to print the error so we have an idea of what the error is
+      //aslo send a snackbar that displays the error for the user to know
+
       debugPrint('Image pick error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -150,6 +193,10 @@ class _ProfilePageState extends State<ProfilePage> {
       }
     }
   }
+
+  //picker options helps us pick images from two sources
+  //when the camera icon is clicked on
+  //Gallery or camera
 
   void _showImagePickerOptions() {
     showModalBottomSheet(
@@ -179,7 +226,10 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  /// Save updated fields to DB. If there's no loaded user we show a message.
+  //when the profile is updated with new info
+  //they are store and if it's empty, the "no user message"
+  //gets displayed
+
   Future<void> _updateProfile() async {
     if (_user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -187,6 +237,10 @@ class _ProfilePageState extends State<ProfilePage> {
       );
       return;
     }
+
+//again generating an appuser instance
+//pour sauver les data du user dans la database
+//en utilisant la method updateAppUser
 
     final updated = AppUser(
       id: _user!.id,
@@ -200,7 +254,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
     try {
       await _databaseManager.updateAppUser(updated);
-      // reload to reflect DB canonical values (but _loadProfile won't clear non-empty UI)
+
+      //loading profile with updates or error message if they failed
+      //for some reason
+
       await _loadProfile();
       if (mounted) {
         showDialog(
@@ -229,7 +286,11 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  /// Revert UI fields to the last-saved DB state with confirmation
+  //this function cancels the changes the user might have wanted
+  //to make to their profile
+  //if the var doCancel is true you simply load the profile info
+  //that was lastly saved
+
   Future<void> _confirmCancel() async {
     final doCancel = await showDialog<bool>(
       context: context,
@@ -251,10 +312,15 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
 
+//doCancel acts here
+
     if (doCancel == true) {
       await _loadProfile();
     }
   }
+
+  //Showing full image when the user clicks on the image
+  //to make it bigger , you simply have to "not" the _imageFile
 
   void _showFullImage() {
     if (_imageFile == null) return;
@@ -267,6 +333,11 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
+  //Generating the logout function
+  //that replaces the current page with the LoginPage
+  //meaning on revient vers le login by replacing it
+  //avec la page actuelle
 
   void _logout() {
     Navigator.pushReplacement(
@@ -309,6 +380,12 @@ class _ProfilePageState extends State<ProfilePage> {
                             backgroundImage: _imageFile != null
                                 ? FileImage(_imageFile!)
                                 : null,
+
+                            //displaying a white person icon
+                            //when the imageFile is empty
+                            //donc quand y'a pas d'image stored yet
+                            //genre new account for example
+
                             child: _imageFile == null
                                 ? const Icon(
                                     CupertinoIcons.person_crop_circle_fill,
@@ -359,8 +436,13 @@ class _ProfilePageState extends State<ProfilePage> {
                       hintText: 'Phone',
                       obscureText: false,
                       leadingIcon: const Icon(CupertinoIcons.phone_fill),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      textInputAction: TextInputAction.done,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: false),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(10),
+                      ],
                     ),
                     const SizedBox(height: 40),
                     Row(

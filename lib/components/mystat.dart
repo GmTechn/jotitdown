@@ -17,46 +17,46 @@ class StatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        height: 82,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(.05),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            )
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.all(10),
-              child: Icon(icon, color: iconColor),
+    return Container(
+      height: 82,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label,
-                    style: const TextStyle(
-                        color: Colors.black54, fontWeight: FontWeight.w500)),
-                const SizedBox(height: 6),
-                Text(value,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 18)),
-              ],
-            )
-          ],
-        ),
+            padding: const EdgeInsets.all(10),
+            child: Icon(icon, color: iconColor),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.black54,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(
+            width: 10,
+          ),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
+        ],
       ),
     );
   }

@@ -11,6 +11,8 @@ class Mytextfield extends StatelessWidget {
     this.trailingIcon,
     this.keyboardType,
     this.inputFormatters,
+    this.textInputAction,
+    this.onSubmitted,
   });
 
   final TextEditingController controller;
@@ -19,7 +21,9 @@ class Mytextfield extends StatelessWidget {
   final Widget leadingIcon;
   final Widget? trailingIcon;
   final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
   final List<TextInputFormatter>? inputFormatters;
+  final ValueChanged<String>? onSubmitted; // 👈 ajout
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +35,15 @@ class Mytextfield extends StatelessWidget {
         obscureText: obscureText,
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,
+        textInputAction: textInputAction ?? TextInputAction.next,
+        onSubmitted: (value) {
+          if (textInputAction == TextInputAction.done) {
+            FocusScope.of(context).unfocus();
+          }
+          if (onSubmitted != null) {
+            onSubmitted!(value);
+          }
+        },
         cursorColor: const Color(0xff050c20),
         decoration: InputDecoration(
           prefixIcon: leadingIcon,

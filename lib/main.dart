@@ -14,7 +14,8 @@ void main() async {
   final dbManager = DatabaseManager();
   await dbManager.initialisation();
 
-//---check if the user is logged in
+//---checkin if the user is logged in because we
+//have saved their preferences
 
   final prefs = await SharedPreferences.getInstance();
   final savedEmail = prefs.getString('loggedInEmail');
@@ -34,11 +35,18 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      initialRoute: initialEmail == null ? '/' : '/',
+
+      //initial route, first route to go to is login page
+
+      initialRoute: initialEmail == null ? '/' : '/taskspage',
       routes: {
         '/': (context) => const LoginPage(),
       },
       onGenerateRoute: (settings) {
+        //--- Generating routes to push the pages too
+        //--- Different pages have different arguments that are being passed or not
+        //---Sign up doesn't have any argument passed
+
         final args = settings.arguments as Map<String, dynamic>?;
 
         switch (settings.name) {
@@ -46,19 +54,24 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(
               builder: (_) => const SignUpPage(),
             );
+
+          //Dashboard gets the email argument from the signup page
+          //because the name of the user has to be displayed
+          //while they're being welcomed
+
           case '/dashboard':
             return MaterialPageRoute(
               builder: (_) => Dashboard(
                 email: args?['email'] ?? initialEmail ?? '',
               ),
             );
-          case '/transactions':
+          case '/schedule':
             return MaterialPageRoute(
               builder: (_) => SchedulePage(
                 email: args?['email'] ?? initialEmail ?? '',
               ),
             );
-          case '/mycards':
+          case '/taskspage':
             return MaterialPageRoute(
               builder: (_) => TasksPage(
                 email: args?['email'] ?? initialEmail ?? '',

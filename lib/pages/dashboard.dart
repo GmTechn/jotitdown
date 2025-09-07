@@ -59,7 +59,7 @@ class _DashboardState extends State<Dashboard> {
     _loadTasks();
   }
 
-//--Refreshing
+//--Refreshing the page to reload the page
 
   @override
   void didChangeDependencies() {
@@ -188,7 +188,7 @@ class _DashboardState extends State<Dashboard> {
 //---Open TaskPage but make sure they always appear
 ////when the page is initialized
 
-  void _openTasksPage() {
+  void _openSchedulePage() {
     Navigator.push(
         context,
         MaterialPageRoute(
@@ -310,7 +310,7 @@ class _DashboardState extends State<Dashboard> {
                                 ),
                                 child: Text(
                                   '$overdueCount',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 10,
@@ -333,20 +333,25 @@ class _DashboardState extends State<Dashboard> {
                 //calling on the StatTile class
 
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    StatTile(
-                        icon: CupertinoIcons.book_fill,
-                        label: 'Notes',
-                        value: '$totalTasks',
-                        iconColor: Colors.orange),
-                    SizedBox(
+                    Expanded(
+                      child: StatTile(
+                          icon: CupertinoIcons.book_fill,
+                          label: 'Notes',
+                          value: '$totalTasks',
+                          iconColor: Colors.orange),
+                    ),
+                    const SizedBox(
                       width: 6,
                     ),
-                    StatTile(
-                        icon: CupertinoIcons.checkmark_seal_fill,
-                        label: 'Tasks',
-                        value: '$completedToday',
-                        iconColor: Colors.green),
+                    Expanded(
+                      child: StatTile(
+                          icon: CupertinoIcons.checkmark_seal_fill,
+                          label: 'Tasks',
+                          value: '$completedToday',
+                          iconColor: Colors.green),
+                    ),
                   ],
                 ),
 
@@ -402,7 +407,7 @@ class _DashboardState extends State<Dashboard> {
                 Column(
                   children: todayTasks.map((item) {
                     return GestureDetector(
-                      onTap: _openTasksPage,
+                      onTap: _openSchedulePage,
                       child: Container(
                         width: double.infinity,
                         margin: const EdgeInsets.only(bottom: 12),
@@ -442,22 +447,22 @@ class _DashboardState extends State<Dashboard> {
                   height: 28,
                 ),
 
-                // Center(
-                //   child: MyButton(
-                //       textbutton: 'Users',
-                //       onTap: () {
-                //         Navigator.push(
-                //           context,
-                //           MaterialPageRoute(
-                //               builder: (context) => const ListOfUsers()),
-                //         ).then((_) {
-                //           _loadUser();
-                //           _loadTasks();
-                //         });
-                //       },
-                //       buttonHeight: 40,
-                //       buttonWidth: 80),
-                // ),
+                Center(
+                  child: MyButton(
+                      textbutton: 'Users',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const ListOfUsers()),
+                        ).then((_) {
+                          _loadUser();
+                          _loadTasks();
+                        });
+                      },
+                      buttonHeight: 40,
+                      buttonWidth: 80),
+                ),
               ],
             ),
           ),
@@ -487,6 +492,7 @@ class _DashboardState extends State<Dashboard> {
     }
   }
 }
+
 //---Generating a class for a status item
 //with a task a string to say the task
 //an a color depending on the status

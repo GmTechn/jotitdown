@@ -244,31 +244,39 @@ class _SchedulePageState extends State<SchedulePage> {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: const Icon(CupertinoIcons.clock),
-                          title: const Text('Start'),
-                          subtitle: Text(_fmt(startTOD)),
-                          onTap: pickStart,
+                  Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 140,
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(CupertinoIcons.clock),
+                            title: const Text('Start'),
+                            subtitle: Text(_fmt(startTOD)),
+                            onTap: pickStart,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: const Icon(CupertinoIcons.clock_fill),
-                          title: const Text('End'),
-                          subtitle: Text(_fmt(endTOD)),
-                          onTap: pickEnd,
+                        const SizedBox(
+                          width: 20,
                         ),
-                      ),
-                    ],
+                        SizedBox(
+                          width: 140,
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(CupertinoIcons.clock_fill),
+                            title: const Text('End'),
+                            subtitle: Text(_fmt(endTOD)),
+                            onTap: pickEnd,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       TextButton(
                         onPressed: () {
@@ -281,14 +289,13 @@ class _SchedulePageState extends State<SchedulePage> {
                           'Clear',
                         ),
                       ),
-                      const Spacer(),
-                      ElevatedButton(
+                      TextButton(
                         onPressed: _saveTimes,
                         child: const Text('Save'),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 30),
                 ],
               ),
             );
