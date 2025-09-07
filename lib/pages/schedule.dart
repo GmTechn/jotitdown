@@ -459,7 +459,10 @@ class _SchedulePageState extends State<SchedulePage> {
   }
 }
 
-// --- Classe DayItem interne ---
+// --- Classe DayItem ---
+//--generating une class dayItem qui contient un label "Mon", "Tue",
+//et un integer qui est le jour
+
 class _DayItem {
   final String label;
   final int day;
@@ -467,6 +470,8 @@ class _DayItem {
 }
 
 // --- Classe SheetHandle ---
+//generating le bottom modal sheet's handle
+
 class _SheetHandle extends StatelessWidget {
   const _SheetHandle();
   @override

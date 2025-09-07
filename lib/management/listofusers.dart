@@ -16,6 +16,11 @@ class _ListOfUsersState extends State<ListOfUsers> {
 
   // Users list
   List<AppUser> _users = [];
+
+  ///this helps sort the users in the database
+  ///for debbugging purposes
+  ///on peut supprimer plus tard
+  ///
   List<AppUser> _filteredUsers = [];
 
   final DatabaseManager _databaseManager = DatabaseManager();
@@ -39,7 +44,10 @@ class _ListOfUsersState extends State<ListOfUsers> {
     });
   }
 
-  // Search
+  /// Search function to search through users
+  /// via name, surname or even email
+  /// quand tu start typing any of those
+  /// les users avec ces details apper
   void _searchUsers(String query) {
     final results = _users.where((user) {
       final fullName = '${user.fname} ${user.lname}'.toLowerCase();
@@ -52,6 +60,12 @@ class _ListOfUsersState extends State<ListOfUsers> {
       _filteredUsers = results;
     });
   }
+
+  ///------Making use of the database function to CRUD users
+  ///basically edit or delete
+  ///for debugging pursposes
+  ///this list is access via the button users on the dashboard
+  ///but would be deleted when the app is deployed
 
   // Delete user
   Future<void> _deleteUser(AppUser user) async {
