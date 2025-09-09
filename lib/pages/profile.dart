@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:notesapp/components/mybutton.dart';
 import 'package:notesapp/components/mynavbar.dart';
+import 'package:notesapp/components/Mytextfield.dart';
 import 'package:notesapp/components/mytextfield.dart';
 import 'package:notesapp/management/database.dart';
 import 'package:notesapp/models/users.dart';
@@ -410,28 +411,28 @@ class _ProfilePageState extends State<ProfilePage> {
                       ],
                     ),
                     const SizedBox(height: 30),
-                    MyTextfield(
+                    Mytextfield(
                       controller: _fnameController,
                       hintText: 'First Name',
                       obscureText: false,
                       leadingIcon: const Icon(CupertinoIcons.person_fill),
                     ),
                     const SizedBox(height: 20),
-                    MyTextfield(
+                    Mytextfield(
                       controller: _lnameController,
                       hintText: 'Last Name',
                       obscureText: false,
                       leadingIcon: const Icon(CupertinoIcons.person_fill),
                     ),
                     const SizedBox(height: 20),
-                    MyTextfield(
+                    Mytextfield(
                       controller: _emailController,
                       hintText: 'Email',
                       obscureText: false,
                       leadingIcon: const Icon(CupertinoIcons.mail_solid),
                     ),
                     const SizedBox(height: 20),
-                    MyTextfield(
+                    Mytextfield(
                       controller: _phoneController,
                       hintText: 'Phone',
                       obscureText: false,
