@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class Mytextfield extends StatelessWidget {
-  const Mytextfield({
+class MyTextfield extends StatefulWidget {
+  const MyTextfield({
     super.key,
     required this.controller,
     required this.hintText,
@@ -26,34 +26,44 @@ class Mytextfield extends StatelessWidget {
   final ValueChanged<String>? onSubmitted;
 
   @override
+  State<MyTextfield> createState() => _MyTextfieldState();
+}
+
+class _MyTextfieldState extends State<MyTextfield> {
+  late FocusNode focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    focusNode = FocusNode();
+  }
+
+  @override
+  void dispose() {
+    focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final focusNode = FocusNode();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 25),
       child: TextField(
-        style: const TextStyle(
-          color: Color(0xff050c20),
-        ),
+        controller: widget.controller,
         focusNode: focusNode,
-        controller: controller,
-        obscureText: obscureText,
-        keyboardType: keyboardType,
-        inputFormatters: inputFormatters,
-        textInputAction: textInputAction ?? TextInputAction.next,
+        obscureText: widget.obscureText,
+        keyboardType: widget.keyboardType,
+        inputFormatters: widget.inputFormatters,
+        textInputAction: widget.textInputAction ?? TextInputAction.next,
         onSubmitted: (value) {
-          focusNode.unfocus();
-          if (textInputAction == TextInputAction.done) {
-            FocusScope.of(context).unfocus();
-          }
-          if (onSubmitted != null) {
-            onSubmitted!(value);
-          }
+          focusNode.unfocus(); // ferme le clavier
+          if (widget.onSubmitted != null) widget.onSubmitted!(value);
         },
         cursorColor: const Color(0xff050c20),
         decoration: InputDecoration(
-          prefixIcon: leadingIcon,
-          suffixIcon: trailingIcon,
-          hintText: hintText,
+          prefixIcon: widget.leadingIcon,
+          suffixIcon: widget.trailingIcon,
+          hintText: widget.hintText,
           enabledBorder: OutlineInputBorder(
             borderSide: BorderSide(
               color: const Color(0xff050c20).withOpacity(.5),

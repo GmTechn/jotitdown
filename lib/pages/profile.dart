@@ -410,35 +410,34 @@ class _ProfilePageState extends State<ProfilePage> {
                       ],
                     ),
                     const SizedBox(height: 30),
-                    Mytextfield(
+                    MyTextfield(
                       controller: _fnameController,
                       hintText: 'First Name',
                       obscureText: false,
                       leadingIcon: const Icon(CupertinoIcons.person_fill),
                     ),
                     const SizedBox(height: 20),
-                    Mytextfield(
+                    MyTextfield(
                       controller: _lnameController,
                       hintText: 'Last Name',
                       obscureText: false,
                       leadingIcon: const Icon(CupertinoIcons.person_fill),
                     ),
                     const SizedBox(height: 20),
-                    Mytextfield(
+                    MyTextfield(
                       controller: _emailController,
                       hintText: 'Email',
                       obscureText: false,
                       leadingIcon: const Icon(CupertinoIcons.mail_solid),
                     ),
                     const SizedBox(height: 20),
-                    Mytextfield(
+                    MyTextfield(
                       controller: _phoneController,
                       hintText: 'Phone',
                       obscureText: false,
                       leadingIcon: const Icon(CupertinoIcons.phone_fill),
                       textInputAction: TextInputAction.done,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: false),
+                      keyboardType: TextInputType.phone,
                       inputFormatters: [
                         FilteringTextInputFormatter.digitsOnly,
                         LengthLimitingTextInputFormatter(10),
