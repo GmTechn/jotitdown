@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class MyTextfield extends StatefulWidget {
-  const MyTextfield({
+class Mytextfield extends StatefulWidget {
+  const Mytextfield({
     super.key,
     required this.controller,
     required this.hintText,
@@ -26,10 +26,10 @@ class MyTextfield extends StatefulWidget {
   final ValueChanged<String>? onSubmitted;
 
   @override
-  State<MyTextfield> createState() => _MyTextfieldState();
+  State<Mytextfield> createState() => _MytextfieldState();
 }
 
-class _MyTextfieldState extends State<MyTextfield> {
+class _MytextfieldState extends State<Mytextfield> {
   late FocusNode focusNode;
 
   @override

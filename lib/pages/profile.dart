@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:notesapp/components/mybutton.dart';
 import 'package:notesapp/components/mynavbar.dart';
-import 'package:notesapp/components/Mytextfield.dart';
 import 'package:notesapp/components/mytextfield.dart';
 import 'package:notesapp/management/database.dart';
 import 'package:notesapp/models/users.dart';
@@ -434,14 +433,14 @@ class _ProfilePageState extends State<ProfilePage> {
                     const SizedBox(height: 20),
                     Mytextfield(
                       controller: _phoneController,
-                      hintText: 'Phone',
+                      hintText: 'Phone Number',
                       obscureText: false,
                       leadingIcon: const Icon(CupertinoIcons.phone_fill),
-                      textInputAction: TextInputAction.done,
-                      keyboardType: TextInputType.phone,
                       inputFormatters: [
                         FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(10),
+                        LengthLimitingTextInputFormatter(
+                          10,
+                        ),
                       ],
                     ),
                     const SizedBox(height: 40),
