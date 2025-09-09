@@ -39,7 +39,7 @@ class Mytextfield extends StatelessWidget {
         obscureText: obscureText,
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,
-        textInputAction: textInputAction ?? TextInputAction.done,
+        textInputAction: textInputAction ?? TextInputAction.next,
         onSubmitted: (value) {
           focusNode.unfocus();
           if (textInputAction == TextInputAction.done) {
