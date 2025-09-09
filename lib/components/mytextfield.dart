@@ -23,20 +23,25 @@ class Mytextfield extends StatelessWidget {
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final List<TextInputFormatter>? inputFormatters;
-  final ValueChanged<String>? onSubmitted; // 👈 ajout
+  final ValueChanged<String>? onSubmitted;
 
   @override
   Widget build(BuildContext context) {
+    final focusNode = FocusNode();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 25),
       child: TextField(
-        style: TextStyle(color: Color(0xff050c20)),
+        style: const TextStyle(
+          color: Color(0xff050c20),
+        ),
+        focusNode: focusNode,
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,
-        textInputAction: textInputAction ?? TextInputAction.next,
+        textInputAction: textInputAction ?? TextInputAction.done,
         onSubmitted: (value) {
+          focusNode.unfocus();
           if (textInputAction == TextInputAction.done) {
             FocusScope.of(context).unfocus();
           }
