@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Jot It Down',
+      title: 'JotItDown',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),

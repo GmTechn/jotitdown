@@ -228,11 +228,13 @@ class _DashboardState extends State<Dashboard> {
                       GestureDetector(
                         onTap: () {
                           Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) =>
-                                          ProfilePage(email: widget.email)))
-                              .then((_) => _loadUser());
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ProfilePage(
+                                email: widget.email,
+                              ),
+                            ),
+                          ).then((_) => _loadUser());
                         },
                         child: CircleAvatar(
                           radius: 26,
