@@ -1,26 +1,26 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cupertino_icons/cupertino_icons.dart';
 import 'package:flutter/cupertino.dart';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'package:notesapp/components/mynavbar.dart';
 import 'package:notesapp/components/mybutton.dart';
-
 import 'package:intl/intl.dart';
 import 'package:notesapp/components/mystat.dart';
-
 import 'package:notesapp/management/database.dart';
 import 'package:notesapp/management/listofusers.dart';
-
 import 'package:notesapp/models/task.dart';
 import 'package:notesapp/models/users.dart';
-
 import 'package:notesapp/pages/profile.dart';
 import 'package:notesapp/pages/schedule.dart';
 import 'package:notesapp/pages/tasks.dart';
-import 'package:notesapp/pages/tasks.dart';
+
+// ✅ Create a single instance of flutterLocalNotificationsPlugin
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key, required this.email});
@@ -33,43 +33,117 @@ class Dashboard extends StatefulWidget {
 
 class _DashboardState extends State<Dashboard> {
 //---Generating a database instance---//
-
   final DatabaseManager _databaseManager = DatabaseManager();
 
 //---Generating an instance of an app user
-
   AppUser? _currentUser;
 
 //---counting tasks
-
   int overdueCount = 0;
   int totalTasks = 0;
   int completedToday = 0;
 
 //---List of tasks
-
   List<_TaskStatusItem> todayTasks = [];
 
-//---state initialisation
+//notified tasks
+  Set<String> _notifiedTasks = {};
 
+  //timer
+  late Timer _timer;
+
+//---state initialisation
   @override
   void initState() {
     super.initState();
+    _initializeNotifications();
     _loadUser();
     _loadTasks();
+
+    // 🔹 Mettre à jour le dashboard toutes les 30 secondes
+    _timer = Timer.periodic(Duration(seconds: 30), (_) {
+      _loadTasks();
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
   }
 
 //--Refreshing the page to reload the page
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _loadTasks();
   }
 
+// ✅ initialize local notifications (Android + iOS)
+  Future<void> _initializeNotifications() async {
+    const AndroidInitializationSettings androidInit =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const DarwinInitializationSettings iosInit = DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
+
+    const InitializationSettings initSettings =
+        InitializationSettings(android: androidInit, iOS: iosInit);
+
+    await flutterLocalNotificationsPlugin.initialize(initSettings);
+
+    // Optional: request iOS permissions again just in case
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin>()
+        ?.requestPermissions(alert: true, badge: true, sound: true);
+  }
+
+//displaying notifications and playing sound
+
+  Future<void> _showNotification(String title, String body) async {
+    // Android settings
+    // Android
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+      'task_channel',
+      'Task Notifications',
+      channelDescription: 'Notifications for tasks',
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: true,
+      sound: RawResourceAndroidNotificationSound(
+          'messagenotif'), // juste le nom, pas d'extension
+    );
+
+// iOS
+    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+      sound: 'messagenotif.wav', // exactement le nom du fichier dans Runner
+    );
+
+// NotificationDetails unifiées
+    const NotificationDetails platformDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    // Show the notification
+    await flutterLocalNotificationsPlugin.show(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000, // unique ID
+      title,
+      body,
+      platformDetails,
+    );
+  }
+
 //---loading users from database
 //and initializing the database
-
   Future<void> _loadUser() async {
     await _databaseManager.initialisation();
     final user = await _databaseManager.getUserByEmail(widget.email);
@@ -79,7 +153,6 @@ class _DashboardState extends State<Dashboard> {
   }
 
 //---loading tasks from the database
-
   Future<void> _loadTasks() async {
     await _databaseManager.initialisation();
     final tasks = await _databaseManager.getTasksForUser(widget.email);
@@ -93,25 +166,17 @@ class _DashboardState extends State<Dashboard> {
       final taskDate = task.date;
       final isDone = task.status.toLowerCase() == "done";
 
-//need to check if the task is due today or in the future
-//and set the time to depend on that accordingly
-
+      //need to check if the task is due today or in the future
       if (taskDate.year != now.year ||
           taskDate.month != now.month ||
           taskDate.day != now.day) {
         continue; // On saute les tâches qui ne sont pas pour aujourd'hui
       }
 
-//counting completed task of the day by checking how
-//many have a status "done"
-
-      if (taskDate.year == now.year &&
-          taskDate.month == now.month &&
-          taskDate.day == now.day) {
-        if (isDone) {
-          completed++;
-          continue;
-        }
+      //counting completed task of the day by checking how many have a status "done"
+      if (isDone) {
+        completed++;
+        continue;
       }
 
       // Parsing start et end times and formatting them
@@ -131,9 +196,7 @@ class _DashboardState extends State<Dashboard> {
         }
       } catch (_) {}
 
-//
-//---Determining status color
-
+      //---Determining status color
       String status;
       Color color;
 
@@ -147,6 +210,12 @@ class _DashboardState extends State<Dashboard> {
           now.isBefore(end)) {
         status = "in_progress";
         color = Colors.orange;
+
+        // ✅ trigger notification only once per task
+        if (!_notifiedTasks.contains(task.id.toString())) {
+          _showNotification('Task Reminder', 'It\'s time for: ${task.title}');
+          _notifiedTasks.add(task.id.toString());
+        }
       } else if (start != null && start.isAfter(now)) {
         status = "next";
         color = Colors.blue;
@@ -158,9 +227,7 @@ class _DashboardState extends State<Dashboard> {
       computed.add(_TaskStatusItem(task: task, status: status, color: color));
     }
 
-//sorting by the time to display the one that comes before
-//of after
-
+    //sorting by the time to display the one that comes before or after
     computed.sort(
       (a, b) {
         DateTime aTime =
@@ -175,8 +242,7 @@ class _DashboardState extends State<Dashboard> {
       },
     );
 
-//setting the states of the couting variables
-
+    //setting the states of the counting variables
     setState(() {
       overdueCount = overdue;
       totalTasks = tasks.length;
@@ -185,9 +251,7 @@ class _DashboardState extends State<Dashboard> {
     });
   }
 
-//---Open TaskPage but make sure they always appear
-////when the page is initialized
-
+//---Open TaskPage but make sure they always appear when the page is initialized
   void _openSchedulePage() {
     Navigator.push(
         context,
@@ -210,15 +274,15 @@ class _DashboardState extends State<Dashboard> {
         child: RefreshIndicator(
           onRefresh: _loadTasks,
           child: SingleChildScrollView(
-            physics: AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.all(16.0),
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 //Header
-
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
                   decoration: BoxDecoration(
                     color: Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(18),
@@ -230,9 +294,7 @@ class _DashboardState extends State<Dashboard> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => ProfilePage(
-                                email: widget.email,
-                              ),
+                              builder: (_) => ProfilePage(email: widget.email),
                             ),
                           ).then((_) => _loadUser());
                         },
@@ -252,9 +314,7 @@ class _DashboardState extends State<Dashboard> {
                               : null,
                         ),
                       ),
-                      const SizedBox(
-                        width: 14,
-                      ),
+                      const SizedBox(width: 14),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,9 +326,7 @@ class _DashboardState extends State<Dashboard> {
                                 color: Color(0xff050c20),
                               ),
                             ),
-                            const SizedBox(
-                              height: 4,
-                            ),
+                            const SizedBox(height: 4),
                             Text(
                               _currentUser != null
                                   ? "${_currentUser!.fname} ${_currentUser!.lname}"
@@ -326,14 +384,9 @@ class _DashboardState extends State<Dashboard> {
                   ),
                 ),
 
-                const SizedBox(
-                  height: 18,
-                ),
+                const SizedBox(height: 18),
 
                 //---Generating the stats tiles
-                //meaning number of notes and number of completed tasks
-                //calling on the StatTile class
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -344,9 +397,7 @@ class _DashboardState extends State<Dashboard> {
                           value: '$totalTasks',
                           iconColor: Colors.orange),
                     ),
-                    const SizedBox(
-                      width: 6,
-                    ),
+                    const SizedBox(width: 6),
                     Expanded(
                       child: StatTile(
                           icon: CupertinoIcons.checkmark_seal_fill,
@@ -357,13 +408,9 @@ class _DashboardState extends State<Dashboard> {
                   ],
                 ),
 
-                const SizedBox(
-                  height: 18,
-                ),
+                const SizedBox(height: 18),
 
-                //Today Card : Take the count of the tasks
-                //that are done today and display the amount
-
+                //Today Card
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
@@ -388,9 +435,7 @@ class _DashboardState extends State<Dashboard> {
                           color: Color(0xff050c20),
                         ),
                       ),
-                      const SizedBox(
-                        height: 8,
-                      ),
+                      const SizedBox(height: 8),
                       Text(
                         "Keep up the streak! You\'ve completed $completedToday items today.",
                         style: const TextStyle(
@@ -404,8 +449,6 @@ class _DashboardState extends State<Dashboard> {
                 const SizedBox(height: 18),
 
                 //----Ordering the tasks by time and setting the statuses differences
-                //red : overdue, orange:current, grey:no time set, or blue : next in line
-
                 Column(
                   children: todayTasks.map((item) {
                     return GestureDetector(
@@ -445,9 +488,7 @@ class _DashboardState extends State<Dashboard> {
                   }).toList(),
                 ),
 
-                const SizedBox(
-                  height: 28,
-                ),
+                const SizedBox(height: 28),
 
                 Center(
                   child: MyButton(
@@ -475,7 +516,6 @@ class _DashboardState extends State<Dashboard> {
   }
 
   //---Generating a status label for the Tasks ListTiles
-
   String _statusLabel(_TaskStatusItem item) {
     final formatted =
         (item.task.startTime != null && item.task.startTime!.isNotEmpty)
@@ -496,9 +536,6 @@ class _DashboardState extends State<Dashboard> {
 }
 
 //---Generating a class for a status item
-//with a task a string to say the task
-//an a color depending on the status
-
 class _TaskStatusItem {
   final Task task;
   final String status;

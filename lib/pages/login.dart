@@ -110,7 +110,7 @@ class _LoginPageState extends State<LoginPage> {
                   Text('Welcome back!'),
                 ],
               ),
-              const SizedBox(height: 60),
+              const SizedBox(height: 30),
               Mytextfield(
                 controller: emailController,
                 hintText: 'Email',

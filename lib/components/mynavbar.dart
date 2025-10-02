@@ -34,26 +34,16 @@ class MyNavBar extends StatelessWidget {
                 icon: CupertinoIcons.house_fill,
                 selected: currentIndex == 0,
                 onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Dashboard(
-                        email: email,
-                      ), // required
-                    ),
-                  );
-                },
-              ),
-              IconBottomBar(
-                text: "Tasks",
-                icon: CupertinoIcons.square_list_fill,
-                selected: currentIndex == 2,
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => TasksPage(email: email)),
-                  );
+                  if (currentIndex != 0) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Dashboard(
+                          email: email,
+                        ), // required
+                      ),
+                    );
+                  }
                 },
               ),
               IconBottomBar(
@@ -61,13 +51,29 @@ class MyNavBar extends StatelessWidget {
                 icon: CupertinoIcons.calendar,
                 selected: currentIndex == 1,
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => SchedulePage(
-                              email: email,
-                            )),
-                  );
+                  if (currentIndex != 1) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => SchedulePage(
+                                email: email,
+                              )),
+                    );
+                  }
+                },
+              ),
+              IconBottomBar(
+                text: "Tasks",
+                icon: CupertinoIcons.square_list_fill,
+                selected: currentIndex == 2,
+                onPressed: () {
+                  if (currentIndex != 2) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => TasksPage(email: email)),
+                    );
+                  }
                 },
               ),
               IconBottomBar(
@@ -75,10 +81,12 @@ class MyNavBar extends StatelessWidget {
                 icon: CupertinoIcons.person_fill,
                 selected: currentIndex == 3,
                 onPressed: () {
-                  Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => ProfilePage(email: email)));
+                  if (currentIndex != 3) {
+                    Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ProfilePage(email: email)));
+                  }
                 },
               ),
             ],

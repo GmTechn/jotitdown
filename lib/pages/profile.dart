@@ -101,10 +101,10 @@ class _ProfilePageState extends State<ProfilePage> {
       //coming from the controllers
 
       if ((user.fname ?? '').isNotEmpty) {
-        _fnameController.text = user.fname;
+        _fnameController.text = user.fname!;
       }
       if ((user.lname ?? '').isNotEmpty) {
-        _lnameController.text = user.lname;
+        _lnameController.text = user.lname!;
       }
 
       //Pour l'email on display celui qui est dans la database

@@ -7,11 +7,15 @@ import 'package:notesapp/pages/profile.dart';
 import 'package:notesapp/pages/schedule.dart';
 import 'package:notesapp/pages/signup.dart';
 import 'package:notesapp/pages/tasks.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final dbManager = DatabaseManager();
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
   await dbManager.initialisation();
 
 //---checkin if the user is logged in because we
@@ -19,6 +23,23 @@ void main() async {
 
   final prefs = await SharedPreferences.getInstance();
   final savedEmail = prefs.getString('loggedInEmail');
+
+  //initialization settings for android
+
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  // Initialization settings for iOS
+  final DarwinInitializationSettings initializationSettingsDarwin =
+      DarwinInitializationSettings();
+
+  // Combine
+  InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+    iOS: initializationSettingsDarwin,
+  );
+
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
   runApp(MyApp(initialEmail: savedEmail));
 }

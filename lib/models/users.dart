@@ -1,7 +1,7 @@
 class AppUser {
   final int? id;
-  final String fname;
-  final String lname;
+  final String? fname;
+  final String? lname;
   final String email;
   final String password;
   final String phone;
