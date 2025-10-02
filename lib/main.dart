@@ -10,9 +10,13 @@ import 'package:notesapp/pages/tasks.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 void main() async {
+  //ensuring initialization
   WidgetsFlutterBinding.ensureInitialized();
 
+//database instance
   final dbManager = DatabaseManager();
+
+//notifications pluggin
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
@@ -59,7 +63,7 @@ class MyApp extends StatelessWidget {
 
       //initial route, first route to go to is login page
 
-      initialRoute: initialEmail == null ? '/' : '/taskspage',
+      initialRoute: initialEmail == null ? '/' : '/',
       routes: {
         '/': (context) => const LoginPage(),
       },

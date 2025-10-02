@@ -9,6 +9,8 @@ import 'package:notesapp/management/database.dart';
 import 'package:notesapp/models/users.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:notesapp/pages/login.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 
 class ProfilePage extends StatefulWidget {
   final String email;
@@ -128,6 +130,11 @@ class _ProfilePageState extends State<ProfilePage> {
           _imageFile = f;
           _photoPath = user.photoPath;
         }
+      } else {
+        //si le chemin n'est plus valide -> reset
+
+        _imageFile = null;
+        _photoPath = null;
       }
 
       _user = user;
@@ -154,10 +161,24 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _pickImage(ImageSource source) async {
     try {
       final picked = await _picker.pickImage(source: source, imageQuality: 70);
+
       if (picked != null) {
+        //get persistant document of the application
+        //in which the imaga path is persistantly stored
+
+        final appDirectory = await getApplicationDocumentsDirectory();
+
+        //keep the same file name
+        final fileName = p.basename(picked.path);
+
+        //generate a permanent route in appDirectory
+
+        final savedImage =
+            await File(picked.path).copy('${appDirectory.path}/$fileName');
+
         setState(() {
-          _imageFile = File(picked.path);
-          _photoPath = picked.path;
+          _imageFile = savedImage;
+          _photoPath = savedImage.path;
         });
 
 //Si le user is not null then on generate an instance de user
@@ -165,6 +186,8 @@ class _ProfilePageState extends State<ProfilePage> {
 //and then on maj la database with the new path set
 //so when coming back we get the last set image
 //according to the info store in the db
+
+//Database update
 
         if (_user != null) {
           final updated = AppUser(
@@ -174,7 +197,7 @@ class _ProfilePageState extends State<ProfilePage> {
             email: _user!.email,
             password: _user!.password,
             phone: _user!.phone,
-            photoPath: _photoPath ?? '',
+            photoPath: savedImage.path,
           );
           await _databaseManager.updateAppUser(updated);
           _user = updated;
