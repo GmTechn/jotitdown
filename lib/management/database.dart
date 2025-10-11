@@ -132,6 +132,17 @@ class DatabaseManager {
     );
   }
 
+  // --- Update only the password for a specific user ---
+  Future<void> updatePassword(String email, String newPassword) async {
+    final db = await database;
+    await db.update(
+      'users',
+      {'password': newPassword},
+      where: 'email = ?',
+      whereArgs: [email],
+    );
+  }
+
   ///deleting user dans la database
 
   Future<void> deleteAppUser(int id) async {

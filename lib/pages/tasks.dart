@@ -334,7 +334,7 @@ class _TasksPageState extends State<TasksPage> {
         backgroundColor: const Color(0xff050c20),
         child: const Icon(CupertinoIcons.add, color: Colors.white),
       ),
-      bottomNavigationBar: MyNavBar(currentIndex: 2, email: widget.email),
+      bottomNavigationBar: MyNavBar(currentIndex: 1, email: widget.email),
     );
   }
 

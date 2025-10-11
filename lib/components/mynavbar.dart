@@ -47,31 +47,31 @@ class MyNavBar extends StatelessWidget {
                 },
               ),
               IconBottomBar(
-                text: "Schedule",
-                icon: CupertinoIcons.calendar,
+                text: "Tasks",
+                icon: CupertinoIcons.square_list_fill,
                 selected: currentIndex == 1,
                 onPressed: () {
                   if (currentIndex != 1) {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => SchedulePage(
-                                email: email,
-                              )),
+                          builder: (context) => TasksPage(email: email)),
                     );
                   }
                 },
               ),
               IconBottomBar(
-                text: "Tasks",
-                icon: CupertinoIcons.square_list_fill,
+                text: "Schedule",
+                icon: CupertinoIcons.calendar,
                 selected: currentIndex == 2,
                 onPressed: () {
                   if (currentIndex != 2) {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => TasksPage(email: email)),
+                          builder: (context) => SchedulePage(
+                                email: email,
+                              )),
                     );
                   }
                 },

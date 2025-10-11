@@ -454,7 +454,7 @@ class _SchedulePageState extends State<SchedulePage> {
           ],
         ),
       ),
-      bottomNavigationBar: MyNavBar(currentIndex: 1, email: widget.email),
+      bottomNavigationBar: MyNavBar(currentIndex: 2, email: widget.email),
     );
   }
 }
