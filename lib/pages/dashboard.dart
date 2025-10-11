@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
+import 'package:notesapp/management/notification_services.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -16,10 +17,8 @@ import 'package:notesapp/models/task.dart';
 import 'package:notesapp/models/users.dart';
 import 'package:notesapp/pages/profile.dart';
 import 'package:notesapp/pages/schedule.dart';
-import 'package:notesapp/pages/tasks.dart';
 import 'package:notesapp/management/listofusers.dart';
 
-// ✅ Single instance of the notifications plugin
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
@@ -34,6 +33,8 @@ class Dashboard extends StatefulWidget {
 
 class _DashboardState extends State<Dashboard> {
   final DatabaseManager _databaseManager = DatabaseManager();
+  final NotificationServices _notificationService = NotificationServices();
+
   AppUser? _currentUser;
 
   int overdueCount = 0;
@@ -46,11 +47,14 @@ class _DashboardState extends State<Dashboard> {
   @override
   void initState() {
     super.initState();
-    _initializeNotifications();
+
+    // Initialize notification service
+    _notificationService.initializeNotifications();
+
     _loadUser();
     _loadTasks();
 
-    // 🔹 Optionnel : rafraîchissement automatique
+    // Refresh tasks every 30 seconds
     _timer = Timer.periodic(const Duration(seconds: 30), (_) {
       _loadTasks();
     });
@@ -62,73 +66,7 @@ class _DashboardState extends State<Dashboard> {
     super.dispose();
   }
 
-  Future<void> _initializeNotifications() async {
-    tz.initializeTimeZones();
-    tz.setLocalLocation(
-        tz.getLocation('Europe/Paris')); // adapte selon ton fuseau
-
-    const AndroidInitializationSettings androidInit =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-
-    const DarwinInitializationSettings iosInit = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
-
-    const InitializationSettings initSettings =
-        InitializationSettings(android: androidInit, iOS: iosInit);
-
-    await flutterLocalNotificationsPlugin.initialize(initSettings);
-
-    // Request iOS permissions
-    await flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(alert: true, badge: true, sound: true);
-  }
-
-  Future<void> _scheduleNotification(Task task) async {
-    if (task.startTime == null || task.startTime!.isEmpty) return;
-
-    final now = DateTime.now();
-    final start = DateFormat.jm().parse(task.startTime!);
-    final scheduledDate = tz.TZDateTime(
-      tz.local,
-      now.year,
-      now.month,
-      now.day,
-      start.hour,
-      start.minute,
-    );
-
-    if (scheduledDate.isBefore(now)) return;
-
-    await flutterLocalNotificationsPlugin.zonedSchedule(
-      task.id.hashCode, // ID unique
-      'Task Reminder',
-      "It's time for: ${task.title}",
-      scheduledDate,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'task_channel',
-          'Task Notifications',
-          channelDescription: 'Notifications for tasks',
-          importance: Importance.max,
-          priority: Priority.high,
-          playSound: true,
-          sound: RawResourceAndroidNotificationSound('messagenotif'),
-          enableVibration: true,
-        ),
-        iOS: DarwinNotificationDetails(
-          sound: 'messagenotif.wav',
-        ),
-      ),
-      androidAllowWhileIdle: true,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-    );
-  }
+  //loading users
 
   Future<void> _loadUser() async {
     await _databaseManager.initialisation();
@@ -195,7 +133,11 @@ class _DashboardState extends State<Dashboard> {
 
         // ✅ Planifie la notification seulement une fois
         if (!_notifiedTasks.contains(task.id.toString())) {
-          _scheduleNotification(task);
+          _notificationService.showNotification(
+            id: task.id.hashCode,
+            title: task.title,
+            body: "It's time for : ${task.title}",
+          );
           _notifiedTasks.add(task.id.toString());
         }
       } else if (start != null && start.isAfter(now)) {
@@ -473,7 +415,7 @@ class _DashboardState extends State<Dashboard> {
 
     switch (item.status) {
       case "overdue":
-        return "${item.task.title}: is overdue! Ended at $formatted";
+        return "${item.task.title} is overdue!\nEnded at $formatted";
       case "in_progress":
         return "It's time for: ${item.task.title} ($formatted)";
       case "next":

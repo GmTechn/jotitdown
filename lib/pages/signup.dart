@@ -5,11 +5,8 @@ import 'package:notesapp/components/mybutton.dart';
 import 'package:notesapp/components/mytextfield.dart';
 import 'package:notesapp/management/database.dart';
 import 'package:notesapp/models/users.dart';
-import 'package:notesapp/pages/forgotpass.dart';
 import 'package:notesapp/pages/login.dart';
 import 'package:notesapp/pages/profile.dart';
-import 'package:notesapp/pages/signup.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -24,20 +21,17 @@ class _SignUpPageState extends State<SignUpPage> {
   final passwordController = TextEditingController();
   final confirmpasswordController = TextEditingController();
 
-//visibility for password
+  //visibility for password
   bool _isPasswordVisible = false;
 
-//database instance
+  //database instance
   final DatabaseManager _dbManager = DatabaseManager();
 
-//initialization of state
   @override
   void initState() {
     super.initState();
     _dbManager.initialisation();
   }
-
-//error message
 
   void showErrorMessage(String message) {
     showDialog(
@@ -51,8 +45,6 @@ class _SignUpPageState extends State<SignUpPage> {
       ),
     );
   }
-
-  //register user function
 
   Future<void> registerUser() async {
     final email = emailController.text.trim();
@@ -81,13 +73,12 @@ class _SignUpPageState extends State<SignUpPage> {
       final newUser = AppUser(
         fname: '',
         lname: '',
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
+        email: email,
+        password: password,
         photoPath: '',
       );
 
-      final db = DatabaseManager();
-      await db.insertAppUser(newUser);
+      await _dbManager.insertAppUser(newUser);
 
       if (!mounted) return;
       Navigator.pushReplacement(
@@ -106,6 +97,7 @@ class _SignUpPageState extends State<SignUpPage> {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
           padding: EdgeInsets.only(
               left: 16,
               right: 16,
@@ -152,8 +144,10 @@ class _SignUpPageState extends State<SignUpPage> {
                 controller: passwordController,
                 hintText: 'Password',
                 obscureText: !_isPasswordVisible,
-                leadingIcon: const Icon(CupertinoIcons.lock_fill,
-                    color: Color(0xff050c20)),
+                leadingIcon: const Icon(
+                  CupertinoIcons.lock_fill,
+                  color: Color(0xff050c20),
+                ),
                 trailingIcon: IconButton(
                   icon: Icon(
                       _isPasswordVisible
@@ -198,11 +192,15 @@ class _SignUpPageState extends State<SignUpPage> {
                   const Text("Already have an account?",
                       style: TextStyle(color: Color(0xff050c20))),
                   GestureDetector(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const LoginPage()),
-                    ),
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const LoginPage(
+                                  email: '',
+                                )),
+                      );
+                    },
                     child: const Text(
                       ' Login',
                       style: TextStyle(

@@ -4,12 +4,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:notesapp/components/mybutton.dart';
 import 'package:notesapp/components/mytextfield.dart';
 import 'package:notesapp/management/database.dart';
+import 'package:notesapp/models/users.dart';
 import 'package:notesapp/pages/forgotpass.dart';
 import 'package:notesapp/pages/signup.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final String? email;
+  const LoginPage({super.key, required this.email});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -18,8 +20,28 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+
   bool _isPasswordVisible = false;
   final DatabaseManager _dbManager = DatabaseManager();
+  AppUser? _user;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.email != null && widget.email!.isNotEmpty) {
+      _loadUser(widget.email!); // pass the email
+      emailController.text = widget.email!;
+    }
+  }
+
+  Future<void> _loadUser(String email) async {
+    final user = await _dbManager.getUserByEmail(email);
+    if (mounted) {
+      setState(() {
+        _user = user;
+      });
+    }
+  }
 
   void showErrorMessage(String message) {
     showDialog(
@@ -61,7 +83,7 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
-      // Sauvegarde l'email dans SharedPreferences
+      // Save email in SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('loggedInEmail', email);
 
@@ -81,6 +103,7 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
           padding: EdgeInsets.only(
               left: 16,
               right: 16,
@@ -104,10 +127,15 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 10),
-              const Row(
+              Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Welcome back!'),
+                  const Text(
+                    'Welcome back, ',
+                  ),
+                  Text(
+                    _user != null ? "${_user!.fname}!" : "Guest!",
+                  ),
                 ],
               ),
               const SizedBox(height: 30),
@@ -127,8 +155,10 @@ class _LoginPageState extends State<LoginPage> {
                 controller: passwordController,
                 hintText: 'Password',
                 obscureText: !_isPasswordVisible,
-                leadingIcon: const Icon(CupertinoIcons.lock_fill,
-                    color: Color(0xff050c20)),
+                leadingIcon: const Icon(
+                  CupertinoIcons.lock_fill,
+                  color: Color(0xff050c20),
+                ),
               ),
               const SizedBox(height: 20),
               Row(
@@ -144,7 +174,7 @@ class _LoginPageState extends State<LoginPage> {
                       _isPasswordVisible
                           ? CupertinoIcons.eye_fill
                           : CupertinoIcons.eye_slash_fill,
-                      color: const Color(0xff050c20),
+                      color: Color(0xff050c20),
                     ),
                   ),
                   GestureDetector(
@@ -177,14 +207,21 @@ class _LoginPageState extends State<LoginPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("Don't have an account?",
-                      style: TextStyle(color: Color(0xff050c20))),
-                  GestureDetector(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const SignUpPage()),
+                  const Text(
+                    "Don't have an account?",
+                    style: TextStyle(
+                      color: Color(0xff050c20),
                     ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SignUpPage(),
+                        ),
+                      );
+                    },
                     child: const Text(
                       ' Sign up',
                       style: TextStyle(

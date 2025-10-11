@@ -363,9 +363,13 @@ class _ProfilePageState extends State<ProfilePage> {
   //avec la page actuelle
 
   void _logout() {
+    final email =
+        _user?.email ?? ''; // fallback to empty string if _user is null
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => const LoginPage()),
+      MaterialPageRoute(
+        builder: (_) => LoginPage(email: email),
+      ),
     );
   }
 
